@@ -1294,36 +1294,40 @@ ac_config_guess="$SHELL $ac_aux_dir/config.guess"
 ac_config_sub="$SHELL $ac_aux_dir/config.sub"
 ac_configure="$SHELL $ac_aux_dir/configure" # This should be Cygnus configure.
 
-#AC_ARG_ENABLE(test,
-#                [AS_HELP_STRING([--enable-test],
-#                [enable test mode (don't use in production) [default=no]])],
-#                [enable_test=$enableval],
-#                [enable_test=no])
-#
-#if test "$enable_test" = "yes"; then
-#        AC_DEFINE([DB_NAME], ["firebird01:y:/data/sms/test/labsms.fdb"], [Test DB server])
-#        AC_DEFINE([OK_SUBJECT], ["Test mail OK"], [Test subject for 'Message sent' mail])
-#        AC_DEFINE([KO_SUBJECT], ["Test mail not OK"], [Test subject for 'Message not sent' mail])
-#       AC_DEFINE([ERR_SUBJECT], ["Send SMS error"], [Subject for 'Message error' mail])
-#        AC_DEFINE([RCPT_TO], ["emiliano.giovannetti@tdt.it"], [Test TO recipient])
-#        AC_DEFINE([CC_TO], ["emiliano.giovannetti@tdt.it"], [Test CC recipient])
-#        AC_DEFINE([MAIL_FROM], ["smtpuser@tdt.it"], [Test MAIL FROM recipient])
-#        AC_DEFINE([PROXY_HOST], ["10.50.1.15"], [Test PROXY HOST])
-#        AC_DEFINE([PROXY_PORT], [3128], [Test PROXY PORT])
-#else
-	#AC_DEFINE([DB_NAME], ["firebird01:y:/data/sms/wrk/labsms.fdb"], [Production DB server])
-	#AC_DEFINE([OK_SUBJECT], ["SMS Messages sent succesfully"], [Subject for 'Message sent' mail])
-	#AC_DEFINE([KO_SUBJECT], ["SMS Messages trasmission error"], [Subject for 'Message not sent' mail])
-	#AC_DEFINE([ERR_SUBJECT], ["Send SMS error"], [Subject for 'Message error' mail])
-	#AC_DEFINE([RCPT_TO], ["avviamentopersonale@tdt.it"], [TO recipient])
-	#AC_DEFINE([CC_TO], ["IT.Department@tdt.it"], [CC recipient])
-	#AC_DEFINE([MAIL_FROM], ["smtpuser@tdt.it"], [MAIL FROM recipient])
-	#AC_DEFINE([PROXY_HOST], ["10.50.1.15"], [PROXY HOST])
-	#AC_DEFINE([PROXY_PORT], [3128], [PROXY PORT])
-#fi
+
+
+cat >>confdefs.h <<\_ACEOF
+#define MPI_ADDR 2
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define RACK 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define SLOT 2
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define TIMEOUT 5000000
+_ACEOF
+
 
 cat >>confdefs.h <<\_ACEOF
 #define RUN_AS_USER "root"
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define IP_BASE_ADDR "10.50.3.22"
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define NPLC 1
 _ACEOF
 
 
@@ -1342,17 +1346,6 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 fi
-
-
-cat >>confdefs.h <<\_ACEOF
-#define DB_USER "zefiro_user"
-_ACEOF
-
-
-cat >>confdefs.h <<\_ACEOF
-#define DB_PASSWORD "masterkey"
-_ACEOF
-
 
           ac_config_headers="$ac_config_headers config.h"
 
@@ -2876,10 +2869,83 @@ fi
 #LF_CONFIGURE_CC
 #LF_SET_WARNINGS
 
-#AC_CHECK_LIB(gds, isc_attach_database)
-#AC_CHECK_LIB(glib, main)
 
-                    ac_config_files="$ac_config_files Makefile src/Makefile"
+
+echo "$as_me:$LINENO: checking for daveReadBytes in -lnodave" >&5
+echo $ECHO_N "checking for daveReadBytes in -lnodave... $ECHO_C" >&6
+if test "${ac_cv_lib_nodave_daveReadBytes+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnodave  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char daveReadBytes ();
+int
+main ()
+{
+daveReadBytes ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_nodave_daveReadBytes=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_nodave_daveReadBytes=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_nodave_daveReadBytes" >&5
+echo "${ECHO_T}$ac_cv_lib_nodave_daveReadBytes" >&6
+if test $ac_cv_lib_nodave_daveReadBytes = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBNODAVE 1
+_ACEOF
+
+  LIBS="-lnodave $LIBS"
+
+fi
+
+
+                              ac_config_files="$ac_config_files Makefile src/Makefile test/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -3433,6 +3499,7 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+  "test/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

@@ -1,13 +1,19 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Sqlite db password */
-#undef DB_PASSWORD
-
-/* Sqlite db user */
-#undef DB_USER
-
-/* "Enables debug" */
+/* "Debug enabled" */
 #undef DEBUG
+
+/* Define to 1 if you have the `nodave' library (-lnodave). */
+#undef HAVE_LIBNODAVE
+
+/* PLC's base ip address */
+#undef IP_BASE_ADDR
+
+/* MPI's address */
+#undef MPI_ADDR
+
+/* Number of PLCs */
+#undef NPLC
 
 /* Name of package */
 #undef PACKAGE
@@ -27,8 +33,17 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Rack number */
+#undef RACK
+
 /* Daemon's user */
 #undef RUN_AS_USER
+
+/* CPU's alot */
+#undef SLOT
+
+/* Connection's timeout */
+#undef TIMEOUT
 
 /* Version number of package */
 #undef VERSION

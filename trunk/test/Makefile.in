@@ -44,8 +44,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-sbin_PROGRAMS = zefiro$(EXEEXT)
-subdir = src
+sbin_PROGRAMS = test01$(EXEEXT)
+subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -57,9 +57,9 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(sbin_PROGRAMS)
-am_zefiro_OBJECTS = zefiro-zefiro.$(OBJEXT)
-zefiro_OBJECTS = $(am_zefiro_OBJECTS)
-zefiro_LDADD = $(LDADD)
+am_test01_OBJECTS = test01-test01.$(OBJEXT) test01-readPLC.$(OBJEXT)
+test01_OBJECTS = $(am_test01_OBJECTS)
+test01_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -67,8 +67,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(zefiro_SOURCES)
-DIST_SOURCES = $(zefiro_SOURCES)
+SOURCES = $(test01_SOURCES)
+DIST_SOURCES = $(test01_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -141,9 +141,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-zefiro_SOURCES = zefiro.c
-#zefiro_LDADD = -lpthread
-zefiro_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
+test01_SOURCES = test01.c $(top_srcdir)/src/readPLC.c
+test01_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
 all: all-am
 
 .SUFFIXES:
@@ -157,9 +156,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  test/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --gnu  test/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -200,9 +199,9 @@ uninstall-sbinPROGRAMS:
 
 clean-sbinPROGRAMS:
 	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
-zefiro$(EXEEXT): $(zefiro_OBJECTS) $(zefiro_DEPENDENCIES) 
-	@rm -f zefiro$(EXEEXT)
-	$(LINK) $(zefiro_LDFLAGS) $(zefiro_OBJECTS) $(zefiro_LDADD) $(LIBS)
+test01$(EXEEXT): $(test01_OBJECTS) $(test01_DEPENDENCIES) 
+	@rm -f test01$(EXEEXT)
+	$(LINK) $(test01_LDFLAGS) $(test01_OBJECTS) $(test01_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -210,7 +209,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefiro-zefiro.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test01-readPLC.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test01-test01.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -226,19 +226,33 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 
-zefiro-zefiro.o: zefiro.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefiro_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefiro-zefiro.o -MD -MP -MF "$(DEPDIR)/zefiro-zefiro.Tpo" -c -o zefiro-zefiro.o `test -f 'zefiro.c' || echo '$(srcdir)/'`zefiro.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefiro-zefiro.Tpo" "$(DEPDIR)/zefiro-zefiro.Po"; else rm -f "$(DEPDIR)/zefiro-zefiro.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='zefiro.c' object='zefiro-zefiro.o' libtool=no @AMDEPBACKSLASH@
+test01-test01.o: test01.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test01-test01.o -MD -MP -MF "$(DEPDIR)/test01-test01.Tpo" -c -o test01-test01.o `test -f 'test01.c' || echo '$(srcdir)/'`test01.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test01-test01.Tpo" "$(DEPDIR)/test01-test01.Po"; else rm -f "$(DEPDIR)/test01-test01.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test01.c' object='test01-test01.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefiro_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefiro-zefiro.o `test -f 'zefiro.c' || echo '$(srcdir)/'`zefiro.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test01-test01.o `test -f 'test01.c' || echo '$(srcdir)/'`test01.c
 
-zefiro-zefiro.obj: zefiro.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefiro_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefiro-zefiro.obj -MD -MP -MF "$(DEPDIR)/zefiro-zefiro.Tpo" -c -o zefiro-zefiro.obj `if test -f 'zefiro.c'; then $(CYGPATH_W) 'zefiro.c'; else $(CYGPATH_W) '$(srcdir)/zefiro.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefiro-zefiro.Tpo" "$(DEPDIR)/zefiro-zefiro.Po"; else rm -f "$(DEPDIR)/zefiro-zefiro.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='zefiro.c' object='zefiro-zefiro.obj' libtool=no @AMDEPBACKSLASH@
+test01-test01.obj: test01.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test01-test01.obj -MD -MP -MF "$(DEPDIR)/test01-test01.Tpo" -c -o test01-test01.obj `if test -f 'test01.c'; then $(CYGPATH_W) 'test01.c'; else $(CYGPATH_W) '$(srcdir)/test01.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test01-test01.Tpo" "$(DEPDIR)/test01-test01.Po"; else rm -f "$(DEPDIR)/test01-test01.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test01.c' object='test01-test01.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefiro_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefiro-zefiro.obj `if test -f 'zefiro.c'; then $(CYGPATH_W) 'zefiro.c'; else $(CYGPATH_W) '$(srcdir)/zefiro.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test01-test01.obj `if test -f 'test01.c'; then $(CYGPATH_W) 'test01.c'; else $(CYGPATH_W) '$(srcdir)/test01.c'; fi`
+
+test01-readPLC.o: $(top_srcdir)/src/readPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test01-readPLC.o -MD -MP -MF "$(DEPDIR)/test01-readPLC.Tpo" -c -o test01-readPLC.o `test -f '$(top_srcdir)/src/readPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/readPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test01-readPLC.Tpo" "$(DEPDIR)/test01-readPLC.Po"; else rm -f "$(DEPDIR)/test01-readPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/readPLC.c' object='test01-readPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test01-readPLC.o `test -f '$(top_srcdir)/src/readPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/readPLC.c
+
+test01-readPLC.obj: $(top_srcdir)/src/readPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test01-readPLC.obj -MD -MP -MF "$(DEPDIR)/test01-readPLC.Tpo" -c -o test01-readPLC.obj `if test -f '$(top_srcdir)/src/readPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/readPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/readPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test01-readPLC.Tpo" "$(DEPDIR)/test01-readPLC.Po"; else rm -f "$(DEPDIR)/test01-readPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/readPLC.c' object='test01-readPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test01_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test01-readPLC.obj `if test -f '$(top_srcdir)/src/readPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/readPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/readPLC.c'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
