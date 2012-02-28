@@ -8,8 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-sbin_PROGRAMS = zefiro
-zefiro_SOURCES = zefiro.c
-#zefiro_LDADD = -lpthread
-zefiro_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
-
+sbin_PROGRAMS = test01
+test01_SOURCES = test01.c $(top_srcdir)/src/readPLC.c
+test01_CPPFLAGS = -I$(top_srcdir)/include -DLINUX

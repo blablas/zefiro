@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2009 Emiliano Giovannetti <emiliano.giovannetti@tdt.it>
+** Copyright (C) 2012 Emiliano Giovannetti <emiliano.giovannetti@tdt.it>
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <pthread.h>
 
 int lfp = -1;
 char *pidfile = NULL;
@@ -160,7 +159,7 @@ daemonize (const char *pidfile)
 int
 main (int argc, char *argv[])
 {
-  int c, i,j;
+  int c, i, j;
 
   long result = 0;
 
