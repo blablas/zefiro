@@ -1,58 +1,65 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "readPLC.h"
-
-#define	MAX	10
+#include "connectPLC.h"
 
 typedef struct 
 {
-  int wind[MAX];
-  int first;
-  int last;
-} windList; 
+  int data[MAX];
+  int f;
+  int l;
+  int min;
+  int max;
+} plcData; 
 
 void
-printList (windList *buffer)
+printList (plcData *buffer)
 {
   int i;
 
-  for (i = 0; i < MAX; i++)
-    printf ("%d,", buffer->wind[(buffer->first + i) % MAX]);
-  printf ("\n");
+  for (i = 0; i < MAX - 1; i++)
+    printf ("%d,", buffer->data[i]);
+  printf ("%d\n", buffer->data[MAX - 1]);
 }
 
 void
-insList (windList *buffer, const int value)
+insList (plcData *buffer, const int value)
 {
-  int tmp;
-  tmp = buffer->wind[buffer->first];
-  buffer->last = (buffer->last + 1) % MAX; 
-  buffer->wind[buffer->last] = value;
-  if ((buffer->last == buffer->first) && tmp != -1)
-    buffer->first = (buffer->first + 1) % MAX;
-  printf ("(first, last): (%d, %d)\n", buffer->first, buffer->last);
+  // new value for last index
+  buffer->l = (buffer->l + 1) % MAX; 
+  if (buffer->data[buffer->f] > 0)
+    // MAX element queue 
+    if (buffer->l == buffer->f) 
+      // new value form first index
+      buffer->f = (buffer->f + 1) % MAX;
+  // insert value
+  buffer->data[buffer->l] = value;
 }
 
 void 
-initList (windList *buffer)
+initList (plcData *buffer)
 {
   int i;
 
   for (i = 0; i < MAX; i++)
-    buffer->wind[i] = -1;
-  buffer->first = 0;
-  buffer->last = MAX - 1;
+    buffer->data[i] = -1;
+  buffer->f = 0;
+  buffer->l = MAX - 1;
+  buffer->min = 0;
+  buffer->max = 0;
 }
 
 int 
 main (void)
 {
-  int i = 1, vp = -1;
+  int i = 1 , vp;
 
   daveConnection *dc; 
   daveInterface *di;
-  windList wlist;
+  plcData wlist;
 
   initList (&wlist);
  
@@ -60,7 +67,8 @@ main (void)
     {
       for (i = 0; i < 22; i++)
 	{
-	  vp = plcRead (dc, daveFlags, 0, 100, 2, NULL);
+	  daveReadBytes (dc, daveDB, DAREA, 0, DBLEN, NULL);
+	  vp = daveGetU16At (dc, 2);
 	  printf ("Vp: %d\n", vp);
           insList (&wlist, vp);
           printList (&wlist);
@@ -71,4 +79,3 @@ main (void)
 
   return vp;
 }
-

@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "readPLC.h"
+#include "connectPLC.h"
 
 int 
 plcIP (const int index, char *ip)
@@ -60,7 +60,6 @@ plcConnect (const int i, daveConnection **dc, daveInterface **di)
   if (fds.rfd)
     {
       *di = daveNewInterface (fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
-      daveSetTimeout (*di, TIMEOUT);
       *dc = daveNewConnection (*di, MPI_ADDR, RACK, SLOT);
       if (!daveConnectPLC (*dc)) 
 	  fail = 0;
@@ -75,14 +74,4 @@ plcDisconnect (daveConnection **dc, daveInterface **di)
   daveDisconnectPLC(*dc);
   daveDisconnectAdapter(*di);
   return 0;
-}
-
-int 
-plcRead (daveConnection *dc,  int area,  int db,  int start,  int len, void *buffer)
-{
-  int result = -1;
-
-  if (!(result = daveReadBytes (dc, area, db, start, len, buffer))) 
-    result =  daveGetU16 (dc);
-  return result;
 }

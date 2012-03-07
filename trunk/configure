@@ -812,6 +812,15 @@ Optional Features:
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
 
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-plc              number of PLCs [default=1]
+  --with-max-samples      Max sampling interval for media calculation
+                          [default=10]
+  --with-min-samples      Min sampling interval for media calculation
+                          [default=5]
+
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -1312,7 +1321,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-#define TIMEOUT 5000000
+#define DAREA 105
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define DBLEN 50
 _ACEOF
 
 
@@ -1326,8 +1340,45 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
-#define NPLC 1
+
+# Check whether --with-plc or --without-plc was given.
+if test "${with_plc+set}" = set; then
+  withval="$with_plc"
+  with_plc=$withval
+else
+  with_plc=1
+fi;
+
+cat >>confdefs.h <<_ACEOF
+#define NPLC $with_plc
+_ACEOF
+
+
+
+# Check whether --with-max-samples or --without-max-samples was given.
+if test "${with_max_samples+set}" = set; then
+  withval="$with_max_samples"
+  with_max=$withval
+else
+  with_max=10
+fi;
+
+cat >>confdefs.h <<_ACEOF
+#define MAX $with_max
+_ACEOF
+
+
+
+# Check whether --with-min-samples or --without-min-samples was given.
+if test "${with_min_samples+set}" = set; then
+  withval="$with_min_samples"
+  with_min=$withval
+else
+  with_min=5
+fi;
+
+cat >>confdefs.h <<_ACEOF
+#define MIN $with_min
 _ACEOF
 
 
@@ -1338,14 +1389,16 @@ if test "${enable_debug+set}" = set; then
 else
   enable_debug=no
 fi;
+if test "$enable_debug" != "no"; then
 
-if test "$enable_debug" = "yes"; then
 
 cat >>confdefs.h <<\_ACEOF
 #define DEBUG 1
 _ACEOF
 
+
 fi
+
 
           ac_config_headers="$ac_config_headers config.h"
 
@@ -2871,9 +2924,9 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for daveReadBytes in -lnodave" >&5
-echo $ECHO_N "checking for daveReadBytes in -lnodave... $ECHO_C" >&6
-if test "${ac_cv_lib_nodave_daveReadBytes+set}" = set; then
+echo "$as_me:$LINENO: checking for daveGetU16At in -lnodave" >&5
+echo $ECHO_N "checking for daveGetU16At in -lnodave... $ECHO_C" >&6
+if test "${ac_cv_lib_nodave_daveGetU16At+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -2891,11 +2944,11 @@ extern "C"
 #endif
 /* We use char because int might match the return type of a gcc2
    builtin and then its argument prototype would still apply.  */
-char daveReadBytes ();
+char daveGetU16At ();
 int
 main ()
 {
-daveReadBytes ();
+daveGetU16At ();
   ;
   return 0;
 }
@@ -2922,20 +2975,20 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_nodave_daveReadBytes=yes
+  ac_cv_lib_nodave_daveGetU16At=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_nodave_daveReadBytes=no
+ac_cv_lib_nodave_daveGetU16At=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_nodave_daveReadBytes" >&5
-echo "${ECHO_T}$ac_cv_lib_nodave_daveReadBytes" >&6
-if test $ac_cv_lib_nodave_daveReadBytes = yes; then
+echo "$as_me:$LINENO: result: $ac_cv_lib_nodave_daveGetU16At" >&5
+echo "${ECHO_T}$ac_cv_lib_nodave_daveGetU16At" >&6
+if test $ac_cv_lib_nodave_daveGetU16At = yes; then
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBNODAVE 1
 _ACEOF

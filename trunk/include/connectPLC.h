@@ -15,17 +15,11 @@
 ** along with this program; if not, write to the Free Software 
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#ifndef READPLC_H
-#define READPLC_H
+#ifndef CONNECTPLC_H
+#define CONNECTPLC_H
 #include <nodave.h>
 #include <openSocket.h>
 
 extern int plcConnect (const int i, daveConnection **dc, daveInterface **di);
 extern int plcDisconnect (daveConnection **dc, daveInterface **di);
-extern int plcRead (daveConnection *dc, 
-		    int area, 
-		    int db, 
-		    int start, 
-		    int len, 
-		    void *buffer);
 #endif
