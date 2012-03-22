@@ -2,6 +2,7 @@ AC_INIT([zefiro],
         [1.0.0],
         [Emiliano Giovannetti emiliano.giovannetti@tdt.it],
         [zefiro])
+
 AC_CONFIG_AUX_DIR(config)
 
 AC_DEFINE([MPI_ADDR], [2], [MPI's address])
@@ -10,14 +11,17 @@ AC_DEFINE([SLOT], [2], [CPU's slot])
 AC_DEFINE([DAREA], [105], [PLC's data area])
 AC_DEFINE([DBLEN], [50], [PLC's data area length])
 AC_DEFINE([RUN_AS_USER], ["root"], [Daemon's user])
-AC_DEFINE([IP_BASE_ADDR], ["10.50.3.22"], [PLC's base ip address])
+AC_DEFINE([DBHOST], ["localhost"], [PLC's DB host])
+AC_DEFINE([DBNAME], ["PLC"], [PLC's DB])
+AC_DEFINE([DBUSER], ["plcuser"], [PLC's DB user])
+AC_DEFINE([DBPWD], ["plcuser"], [PLC's DB password])
 
-AC_ARG_WITH([plc],
-                [AS_HELP_STRING([--with-plc],
-                [number of PLCs [default=1]])],
-                [with_plc=$withval],
-                [with_plc=1])
-AC_DEFINE_UNQUOTED([NPLC], [$with_plc], [Number of PLCs])
+AC_ARG_WITH([timeout], 
+		[AS_HELP_STRING([--with-timeout],
+		[PLC's connection timeout (in seconds) [default=5]])], 
+                [with_timeout=$withval],
+                [with_timeout=5])
+AC_DEFINE_UNQUOTED([TIMEOUT], [$with_timeout], [PLC's connection timeout (in seconds)])
 
 AC_ARG_WITH([max-samples],
                 [AS_HELP_STRING([--with-max-samples],
@@ -46,8 +50,6 @@ AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 AC_PROG_CC
-#LF_CONFIGURE_CC
-#LF_SET_WARNINGS
 
 AC_CHECK_LIB(nodave, daveGetU16At)
 
@@ -55,7 +57,11 @@ AC_CONFIG_FILES([
    Makefile
    src/Makefile
    test/Makefile
+   scripts/Makefile
 ])
+AC_CONFIG_FILES([scripts/zefirod], [chmod o+x scripts/zefirod])
+AC_CONFIG_FILES([scripts/zefirod.check], [chmod o+x scripts/zefirod.check])
+AC_CONFIG_FILES([scripts/zefirod.mail])
+AC_CONFIG_FILES([scripts/zefirod.crontab])
 
 AC_OUTPUT
-

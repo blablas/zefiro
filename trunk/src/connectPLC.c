@@ -23,47 +23,48 @@
 #include <stdio.h>
 #include "connectPLC.h"
 
-int 
-plcIP (const int index, char *ip)
-{
-  int ilast;
-  char *slast;
+//int 
+//plcIP (const int index, char *ip)
+//{
+//  int ilast;
+//  char *slast;
+//
+//  slast = strrchr (IP_BASE_ADDR, '.') + 1;
+//  ilast = atoi (slast) + index - 1;
+//  strncpy(ip, IP_BASE_ADDR, strlen (IP_BASE_ADDR) - strlen (slast));
+//  return sprintf(ip, "%s%d", ip, ilast);
+//}
 
-  slast = strrchr (IP_BASE_ADDR, '.') + 1;
-  ilast = atoi (slast) + index - 1;
-  strncpy(ip, IP_BASE_ADDR, strlen (IP_BASE_ADDR) - strlen (slast));
-  return sprintf(ip, "%s%d", ip, ilast);
-}
-
 int 
-plcConnect (const int i, daveConnection **dc, daveInterface **di)
+plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
 {
   _daveOSserialType fds;
-  int j, fail = 1;
-  char *ip;
+  int j, optval, fail = daveResTimeout;
+//  char *ip;
 
 #ifdef DEBUG
   daveSetDebug (daveDebugAll);
 #endif
   // get ip address for PLC n° i
-  ip = malloc ((strlen (IP_BASE_ADDR) + 1) * sizeof (char));
-  if (ip == NULL)
-    return -1;
-  if (plcIP (i, ip) < 0) 
-    return -1;
+//  ip = malloc ((strlen (IP_BASE_ADDR) + 1) * sizeof (char));
+//  if (ip == NULL)
+//    return fail;
+//  if (plcIP (i, ip) < 0) 
+//    return fail;
 
   // open a TCP on ISO connection with PLC
-  fds.rfd=openSocket (102, ip);
+  fds.rfd = openSocket (102, ip, TIMEOUT);
+  //fds.rfd = openSocket (102, ip);
   fds.wfd = fds.rfd;
 
   // connect to the PLC
   if (fds.rfd)
     {
       *di = daveNewInterface (fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
+      daveSetTimeout (*di, TIMEOUT * 1000000);
       *dc = daveNewConnection (*di, MPI_ADDR, RACK, SLOT);
-      if (!daveConnectPLC (*dc)) 
-	  fail = 0;
-      else plcDisconnect (dc, di);
+      if (fail = daveConnectPLC (*dc)) 
+	plcDisconnect (dc, di);
     }
   return fail;
 }
@@ -71,7 +72,9 @@ plcConnect (const int i, daveConnection **dc, daveInterface **di)
 int
 plcDisconnect (daveConnection **dc, daveInterface **di)
 {
-  daveDisconnectPLC(*dc);
-  daveDisconnectAdapter(*di);
-  return 0;
+  int fail = daveUnknownError;
+
+  if (!(fail = daveDisconnectPLC(*dc)))
+    return daveDisconnectAdapter(*di);
+  return fail;
 }

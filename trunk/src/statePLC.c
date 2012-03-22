@@ -18,109 +18,200 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <stdlib.h>
 #include "statePLC.h"
 
-plcState 
-runStateA (plcData *cur, const int value)
+// PLC's state functions table
+const runState runStateTbl[] = {
+    runStateA, 
+    runStateBCD,
+    runStateBCD,
+    runStateBCD,
+    runStateE
+};
+
+// PLC's state table
+//static struct stateDsc sDummy = { Z, 0, 0, 0, runStateDummy };
+//stateDscPtr stateDscTbl[] = { (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy };
+stateDscPtr stateDscTbl[] = { NULL, NULL, NULL, NULL, NULL };
+
+// find PLC's next and previous state 
+inline stateDscPtr
+nextState (stateLst state)
+{
+  if (state < E)
+    do
+      state++;
+    while (!stateDscTbl[state]);
+  return stateDscTbl[state];
+}
+
+inline stateDscPtr
+prevState (stateLst state)
+{
+  if (state > A)
+    do
+      state--;
+    while (!stateDscTbl[state]);
+  return stateDscTbl[state];
+}
+
+actualStatePtr 
+initActualState (const stateLst state)
+{
+  actualStatePtr asPtr = NULL;
+ 
+  if (stateDscTbl[state] != NULL)
+    {
+      asPtr = malloc (sizeof (struct actualState));
+      if (asPtr)
+	{
+	  asPtr->state = stateDscTbl[state];
+	  asPtr->ucount = (asPtr->state)->sup;
+	  asPtr->dcount = (asPtr->state)->low;
+	}
+    }
+  return asPtr;
+}
+
+void disposeActualState (actualStatePtr actual)
+{
+  if (actual)
+    free (actual);
+}
+
+stateDscPtr
+add2StateDscTbl (const stateLst pos, const stateLst label, const int il, const int sup, const int low, runState newState)
+{
+  stateDscPtr dsPtr = NULL;
+ 
+  dsPtr = malloc (sizeof (struct stateDsc));
+  if (dsPtr)
+    {
+      dsPtr->label = label;
+      dsPtr->il = il;
+      dsPtr->sup = sup;
+      dsPtr->low = low;
+      dsPtr->newState = newState;
+      if (stateDscTbl[pos] != NULL)
+	free (stateDscTbl[pos]);
+      stateDscTbl[pos] = dsPtr;
+    }
+  return dsPtr;
+}
+
+void 
+resetStateDscTbl (void)
+{
+  stateLst i;
+
+  for (i = A; i < Z; i++)
+    if (stateDscTbl[i] != NULL)
+      {
+	free (stateDscTbl[i]);
+	stateDscTbl[i] = NULL;
+      }
+}
+
+stateLst  
+runStateA (actualStatePtr actual, const int value)
 {  
-  plcStateDsc plc = plcTable[cur->state];
+  stateDscPtr tmp = actual->state;
 
   // value > istant threshold
-  if (value > plc.il)
+  if (value > tmp->il)
     {
       // if upgrade counter fires...
-      if (!(--(cur->ucount)))
+      if (!(--(actual->ucount)))
 	{
-	  // upgrade state...
-	  ++(cur->state);
-	  // ...and set corrisponding thresholds
-	  cur->ucount = plcTable[cur->state].sup;
-	  cur->dcount = plcTable[cur->state].low;
+	  // upgrade actual state...
+	  //actual->state = stateDscTbl[tmp->label + 1];
+	  actual->state = nextState (tmp->label);
+	  // ...and initialize actual state thresholds
+	  actual->ucount = (actual->state)->sup;
+	  actual->dcount = (actual->state)->low;
 	}
     }
     // value <= instant threshold
     else 
       // reset upgrade counter to sup threshold
-      cur->ucount = plc.sup;
-  return cur->state;
+      actual->ucount = tmp->sup;
+  return (actual->state)->label;
 }
 
-plcState 
-runStateB (plcData *cur, const int value)
+stateLst  
+runStateBCD (actualStatePtr actual, const int value)
 {
-  plcStateDsc plc = plcTable[cur->state];
+  stateDscPtr tmp = actual->state;
 
   // value > istant threshold
-  if (value > plc.il)
+  if (value > tmp->il)
     {
       // reset downgrade counter to low threshold
-      cur->dcount = plc.low;
+      actual->dcount = tmp->low;
       // if upgrade counter fires...
-      if (!(--(cur->ucount)))
+      if (!(--(actual->ucount)))
 	{
-	  // upgrade state...
-	  ++(cur->state);
-	  // ...and set corrisponding thresholds
-	  cur->ucount = plcTable[cur->state].sup;
-	  cur->dcount = plcTable[cur->state].low;
+	  // upgrade actual state...
+	  //actual->state = stateDscTbl[tmp->label + 1];
+	  actual->state = nextState (tmp->label);
+	  // ...and initialize state thresholds
+	  actual->ucount = (actual->state)->sup;
+	  actual->dcount = (actual->state)->low;
 	}
     }
   else 
     {
-      // value < previuos instant threshold
-      if (value < plcTable[(cur->state) - 1].il)
+      // value <= previuos instant threshold
+      if (value <= stateDscTbl[tmp->label - 1]->il)
 	{
 	  //reset upgrade counter to sup threshold
-	  cur->ucount = plc.sup;
+	  actual->ucount = tmp->sup;
 	  // if downgrade counter fires...
-	  if (!(--(cur->dcount)))
+	  if (!(--(actual->dcount)))
 	    {
-             // downgrade state...
-	     --(cur->state);
+             // downgrade actual state...
+	     //actual->state = stateDscTbl[tmp->label - 1];
+	     actual->state = prevState (tmp->label);
 	     // ...and set corrisponding thresholds
-	     cur->ucount = plcTable[cur->state].sup;
-	     cur->dcount = plcTable[cur->state].low;	      
+	     actual->ucount = (actual->state)->sup;
+	     actual->dcount = (actual->state)->low;	      
 	    }
 	}
       // previous instant threshold < value <= instant threshold
       else 
 	{
           // reset upgrade counter to sup threshold
-          cur->ucount = plc.sup;	  
+          actual->ucount = tmp->sup;	  
           // reset downgrade counter to low threshold
-          cur->dcount = plc.low;	  
+          actual->dcount = tmp->low;	  
 	}
     }
-  return cur->state;
+  return (actual->state)->label;
 }
 
-plcState 
-runStateC (plcData *cur, const int value)
+stateLst  
+runStateDummy (actualStatePtr actual, const int value)
 {
-  return cur->state;
+  return Z;
 }
 
-plcState 
-runStateD (plcData *cur, const int value)
+stateLst  
+runStateE (actualStatePtr actual, const int value)
 {
-  return cur->state;
-}
-
-plcState 
-runStateE (plcData *cur, const int value)
-{
-  plcStateDsc plc = plcTable[cur->state];
+  stateDscPtr tmp = actual->state;
 
   // value < istant threshold
-  if (value < plc.il)
+  if (value < tmp->il)
     // if downgrade counter fires...
-    if (!(--(cur->dcount)))
+    if (!(--(actual->dcount)))
       {
-	// downgrade state...
-	--(cur->state);
+	// downgrade actual state...
+	//actual->state = stateDscTbl[tmp->label - 1];
+	actual->state = prevState (tmp->label);
 	// ...and set corrisponding thresholds
-	cur->ucount = plcTable[cur->state].sup;
-	cur->dcount = plcTable[cur->state].low;
+	actual->ucount = (actual->state)->sup;
+	actual->dcount = (actual->state)->low;
       }
-  return cur->state;
+  return (actual->state)->label;
 }

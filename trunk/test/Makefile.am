@@ -8,8 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-sbin_PROGRAMS = test01 test02
+noinst_PROGRAMS = test01 test02
 test01_SOURCES = test01.c $(top_srcdir)/src/connectPLC.c
 test01_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
-test02_SOURCES = test02.c $(top_srcdir)/src/statePLC.c
-test02_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
+test02_SOURCES = test02.c $(top_srcdir)/src/statePLC.c $(top_srcdir)/src/sqlPLC.c
+test02_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include/mysql -DLINUX
+test02_LDADD = -L/usr/lib64/mysql -lmysqlclient_r -lpthread -lm -lrt -lssl -lcrypto -ldl
