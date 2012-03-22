@@ -55,7 +55,8 @@ initList (plcData *buffer)
 int 
 main (void)
 {
-  int i = 1 , vp;
+  int i, vp, res;
+  char *plc = "10.50.3.22";
 
   daveConnection *dc; 
   daveInterface *di;
@@ -63,19 +64,32 @@ main (void)
 
   initList (&wlist);
  
-  if (!plcConnect (i, &dc, &di))
+  if (!plcConnect (plc, &dc, &di))
     {
-      for (i = 0; i < 22; i++)
+      for (i = 0; i < 60; i++)
 	{
-	  daveReadBytes (dc, daveDB, DAREA, 0, DBLEN, NULL);
-	  vp = daveGetU16At (dc, 2);
-	  printf ("Vp: %d\n", vp);
-          insList (&wlist, vp);
-          printList (&wlist);
 	  usleep (1000000);
+	  if (res = daveReadBytes (dc, daveDB, DAREA, 0, DBLEN, NULL)) 
+	    {
+              printf ("daveReadBytes: %s\n", daveStrerror(res));
+	      if (res = plcDisconnect (&dc, &di))
+		printf ("plcDisconnect: %s\n", daveStrerror(res));
+	      if (res = plcConnect (plc, &dc, &di)) {
+                printf ("plcConnect: %s\n", daveStrerror(res));
+		continue;
+	      }
+	    }
+	  else {
+	    vp = daveGetU16At (dc, 2);
+	    printf ("Vp: %d\n", vp);
+	    insList (&wlist, vp);
+	    printList (&wlist);
+	  }
 	}
-      plcDisconnect (&dc, &di);
+      printf ("Press any key to disconnect");
+      getchar ();
+      if (res = plcDisconnect (&dc, &di))
+	printf ("plcDisconnect (final): %s\n", daveStrerror(res));
     }
-
   return vp;
 }

@@ -3,17 +3,26 @@
 /* PLC's data area */
 #undef DAREA
 
+/* PLC's DB host */
+#undef DBHOST
+
 /* PLC's data area length */
 #undef DBLEN
+
+/* PLC's DB */
+#undef DBNAME
+
+/* PLC's DB password */
+#undef DBPWD
+
+/* PLC's DB user */
+#undef DBUSER
 
 /* "Debug enabled" */
 #undef DEBUG
 
 /* Define to 1 if you have the `nodave' library (-lnodave). */
 #undef HAVE_LIBNODAVE
-
-/* PLC's base ip address */
-#undef IP_BASE_ADDR
 
 /* Max sampling interval for media calculation */
 #undef MAX
@@ -23,9 +32,6 @@
 
 /* MPI's address */
 #undef MPI_ADDR
-
-/* Number of PLCs */
-#undef NPLC
 
 /* Name of package */
 #undef PACKAGE
@@ -53,6 +59,9 @@
 
 /* CPU's slot */
 #undef SLOT
+
+/* PLC's connection timeout (in seconds) */
+#undef TIMEOUT
 
 /* Version number of package */
 #undef VERSION

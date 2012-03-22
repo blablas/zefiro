@@ -19,41 +19,66 @@
 #define STATEPLC_H
 
 // PLC's state enumeration
-typedef enum {A, B, C, D, E} plcState;
+typedef enum {A, B, C, D, E, Z} stateLst;
 
-// PLC's data
-typedef struct 
-{
-  plcState state;
-  // actual state's upgrade level
-  int ucount;
-  // actual state's downgrade level
-  int dcount;
-} plcData; 
+typedef struct actualState * actualStatePtr;
+typedef struct stateDsc * stateDscPtr;
 
 // state function prototype
-typedef plcState (*plcRunState) (plcData *, const int);
+typedef stateLst (*runState) (actualStatePtr , const int);
 
-// PLC's state structure
-typedef struct 
+// PLC's state descriptor
+struct stateDsc
 {
+  // state label
+  stateLst label; 
   // instant state level
   int il;
   // state's upgrade threshold
   int sup; 
   // state's downgrade threshold
   int low;
-  // state function
-  plcRunState newState;
-} plcStateDsc;
+  // state transition function
+  runState newState;  
+};
+
+// PLC's actual state
+struct actualState
+{
+  // actual state descriptor
+  stateDscPtr state;
+  // actual state's upgrade level
+  int ucount;
+  // actual state's downgrade level
+  int dcount;
+}; 
+
+// PLC's state functions table
+extern const runState runStateTbl[];
+
+// PLC's state table
+extern stateDscPtr stateDscTbl[];
 
 // actual state function implementation
-extern plcState runStateA (plcData *plc, const int data);
-extern plcState runStateB (plcData *plc, const int data);
-extern plcState runStateC (plcData *plc, const int data);
-extern plcState runStateD (plcData *plc, const int data);
-extern plcState runStateE (plcData *plc, const int data);
+extern stateLst runStateA (actualStatePtr plc, 
+			   const int data);
+extern stateLst runStateBCD (actualStatePtr plc, 
+			     const int data);
+extern stateLst runStateE (actualStatePtr plc, 
+			   const int data);
+extern stateLst runStateDummy (actualStatePtr plc, 
+			       const int data);
 
-// PLC's state table (forward declaration)
-extern const plcStateDsc plcTable[];
+// PLC's actual state initialization and finalization functions
+extern actualStatePtr initActualState (stateLst state);
+extern void disposeActualState (actualStatePtr actual);
+
+// PLC's state descriptor table initialization and finalization functions
+extern stateDscPtr add2StateDscTbl (const stateLst pos, 
+				       const stateLst label, 
+				       const int il, 
+				       const int sup, 
+				       const int low, 
+				       runState newState);
+extern void resetStateDscTbl (void);
 #endif

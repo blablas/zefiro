@@ -15,11 +15,12 @@
 ** along with this program; if not, write to the Free Software 
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#ifndef CONNECTPLC_H
-#define CONNECTPLC_H
-#include <nodave.h>
-#include <openSocket.h>
+#ifndef THREADPLC_H
+#define THREADPLC_H
+#include <signal.h>
+#include <time.h>
+#include <pthread.h>
 
-extern int plcConnect (const char *ip, daveConnection **dc, daveInterface **di);
-extern int plcDisconnect (daveConnection **dc, daveInterface **di);
+extern int make_periodic (int unsigned period, struct periodic_info *info);
+extern void wait_period (struct periodic_info *info);
 #endif

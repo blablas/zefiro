@@ -44,7 +44,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-sbin_PROGRAMS = test01$(EXEEXT) test02$(EXEEXT)
+noinst_PROGRAMS = test01$(EXEEXT) test02$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -54,16 +54,15 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(sbindir)"
-sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(sbin_PROGRAMS)
+PROGRAMS = $(noinst_PROGRAMS)
 am_test01_OBJECTS = test01-test01.$(OBJEXT) \
 	test01-connectPLC.$(OBJEXT)
 test01_OBJECTS = $(am_test01_OBJECTS)
 test01_LDADD = $(LDADD)
-am_test02_OBJECTS = test02-test02.$(OBJEXT) test02-statePLC.$(OBJEXT)
+am_test02_OBJECTS = test02-test02.$(OBJEXT) test02-statePLC.$(OBJEXT) \
+	test02-sqlPLC.$(OBJEXT)
 test02_OBJECTS = $(am_test02_OBJECTS)
-test02_LDADD = $(LDADD)
+test02_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -147,8 +146,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 test01_SOURCES = test01.c $(top_srcdir)/src/connectPLC.c
 test01_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
-test02_SOURCES = test02.c $(top_srcdir)/src/statePLC.c
-test02_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
+test02_SOURCES = test02.c $(top_srcdir)/src/statePLC.c $(top_srcdir)/src/sqlPLC.c
+test02_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include/mysql -DLINUX
+test02_LDADD = -L/usr/lib64/mysql -lmysqlclient_r -lpthread -lm -lrt -lssl -lcrypto -ldl
 all: all-am
 
 .SUFFIXES:
@@ -182,29 +182,9 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-sbinPROGRAMS: $(sbin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(sbindir)" || $(mkdir_p) "$(DESTDIR)$(sbindir)"
-	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(sbinPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(sbindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(sbinPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(sbindir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
 
-uninstall-sbinPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(sbindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sbindir)/$$f"; \
-	done
-
-clean-sbinPROGRAMS:
-	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
 test01$(EXEEXT): $(test01_OBJECTS) $(test01_DEPENDENCIES) 
 	@rm -f test01$(EXEEXT)
 	$(LINK) $(test01_LDFLAGS) $(test01_OBJECTS) $(test01_LDADD) $(LIBS)
@@ -220,6 +200,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test01-connectPLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test01-test01.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-sqlPLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-statePLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-test02.Po@am__quote@
 
@@ -292,6 +273,20 @@ test02-statePLC.obj: $(top_srcdir)/src/statePLC.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/statePLC.c' object='test02-statePLC.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test02-statePLC.obj `if test -f '$(top_srcdir)/src/statePLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/statePLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/statePLC.c'; fi`
+
+test02-sqlPLC.o: $(top_srcdir)/src/sqlPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test02-sqlPLC.o -MD -MP -MF "$(DEPDIR)/test02-sqlPLC.Tpo" -c -o test02-sqlPLC.o `test -f '$(top_srcdir)/src/sqlPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/sqlPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test02-sqlPLC.Tpo" "$(DEPDIR)/test02-sqlPLC.Po"; else rm -f "$(DEPDIR)/test02-sqlPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/sqlPLC.c' object='test02-sqlPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test02-sqlPLC.o `test -f '$(top_srcdir)/src/sqlPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/sqlPLC.c
+
+test02-sqlPLC.obj: $(top_srcdir)/src/sqlPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test02-sqlPLC.obj -MD -MP -MF "$(DEPDIR)/test02-sqlPLC.Tpo" -c -o test02-sqlPLC.obj `if test -f '$(top_srcdir)/src/sqlPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/sqlPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/sqlPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test02-sqlPLC.Tpo" "$(DEPDIR)/test02-sqlPLC.Po"; else rm -f "$(DEPDIR)/test02-sqlPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/sqlPLC.c' object='test02-sqlPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test02-sqlPLC.obj `if test -f '$(top_srcdir)/src/sqlPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/sqlPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/sqlPLC.c'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -373,9 +368,6 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS)
 installdirs:
-	for dir in "$(DESTDIR)$(sbindir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -402,7 +394,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-sbinPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -422,7 +414,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-sbinPROGRAMS
+install-exec-am:
 
 install-info: install-info-am
 
@@ -447,18 +439,18 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-sbinPROGRAMS
+uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-sbinPROGRAMS ctags distclean distclean-compile \
+	clean-noinstPROGRAMS ctags distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-sbinPROGRAMS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-info-am uninstall-sbinPROGRAMS
+	uninstall-am uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

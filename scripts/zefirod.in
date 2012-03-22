@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# zefirod        Startup script for the SMS Sending Service
+#
+# chkconfig: - 85 15
+# description: SMS Sending Service 
+# processname: zefirod
+# pidfile: /var/run/zefirod.pid
+
+# Copyright (C) 2009 Emiliano Giovannetti <emiliano.giovannetti@tdt.it>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Path to server binary, and short-form for messages.
+zefirod=${ZEFIROD-/usr/local/sbin/zefirod}
+prog=zefirod
+pidfile=${PIDFILE-/var/run/zefirod.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/zefirod}
+RETVAL=0
+
+start() {
+        echo -n $"Starting $prog: "
+        daemon $zefirod -p $pidfile
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch ${lockfile} && logger -i -p local5.info $"zefirod daemon started"
+        RETVAL=$?
+        return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc $zefirod -TERM
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f ${lockfile} ${pidfile} && logger -i -p local5.info $"zefirod daemon stopped"
+        RETVAL=$?
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	if [ -f ${pidfile} ] ; then
+		status $zefirod
+	else
+		start
+	fi
+	;;
+  stop)
+	stop
+	;;
+  status)
+        status $zefirod
+	RETVAL=$?
+	;;
+  restart)
+	stop
+	start
+	;;
+  condrestart)
+	if [ -f ${pidfile} ] ; then
+		stop
+		start
+	fi
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart|condrestart|status|help}"
+	exit 1
+esac
+
+exit $RETVAL
