@@ -9,6 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 sbin_PROGRAMS = zefirod
-zefirod_SOURCES = zefiro.c
+zefirod_SOURCES = zefiro.c $(top_srcdir)/src/connectPLC.c $(top_srcdir)/src/statePLC.c $(top_srcdir)/src/sqlPLC.c $(top_srcdir)/src/threadPLC.c
 zefirod_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include/mysql -DLINUX
 zefirod_LDADD = -L/usr/lib64/mysql -lmysqlclient_r -lpthread -lm -lrt -lssl -lcrypto -ldl

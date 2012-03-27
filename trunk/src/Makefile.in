@@ -57,7 +57,9 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(sbin_PROGRAMS)
-am_zefirod_OBJECTS = zefirod-zefiro.$(OBJEXT)
+am_zefirod_OBJECTS = zefirod-zefiro.$(OBJEXT) \
+	zefirod-connectPLC.$(OBJEXT) zefirod-statePLC.$(OBJEXT) \
+	zefirod-sqlPLC.$(OBJEXT) zefirod-threadPLC.$(OBJEXT)
 zefirod_OBJECTS = $(am_zefirod_OBJECTS)
 zefirod_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -141,7 +143,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-zefirod_SOURCES = zefiro.c
+zefirod_SOURCES = zefiro.c $(top_srcdir)/src/connectPLC.c $(top_srcdir)/src/statePLC.c $(top_srcdir)/src/sqlPLC.c $(top_srcdir)/src/threadPLC.c
 zefirod_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include/mysql -DLINUX
 zefirod_LDADD = -L/usr/lib64/mysql -lmysqlclient_r -lpthread -lm -lrt -lssl -lcrypto -ldl
 all: all-am
@@ -210,6 +212,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefirod-connectPLC.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefirod-sqlPLC.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefirod-statePLC.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefirod-threadPLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zefirod-zefiro.Po@am__quote@
 
 .c.o:
@@ -239,6 +245,62 @@ zefirod-zefiro.obj: zefiro.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='zefiro.c' object='zefirod-zefiro.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-zefiro.obj `if test -f 'zefiro.c'; then $(CYGPATH_W) 'zefiro.c'; else $(CYGPATH_W) '$(srcdir)/zefiro.c'; fi`
+
+zefirod-connectPLC.o: $(top_srcdir)/src/connectPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-connectPLC.o -MD -MP -MF "$(DEPDIR)/zefirod-connectPLC.Tpo" -c -o zefirod-connectPLC.o `test -f '$(top_srcdir)/src/connectPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/connectPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-connectPLC.Tpo" "$(DEPDIR)/zefirod-connectPLC.Po"; else rm -f "$(DEPDIR)/zefirod-connectPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/connectPLC.c' object='zefirod-connectPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-connectPLC.o `test -f '$(top_srcdir)/src/connectPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/connectPLC.c
+
+zefirod-connectPLC.obj: $(top_srcdir)/src/connectPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-connectPLC.obj -MD -MP -MF "$(DEPDIR)/zefirod-connectPLC.Tpo" -c -o zefirod-connectPLC.obj `if test -f '$(top_srcdir)/src/connectPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/connectPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/connectPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-connectPLC.Tpo" "$(DEPDIR)/zefirod-connectPLC.Po"; else rm -f "$(DEPDIR)/zefirod-connectPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/connectPLC.c' object='zefirod-connectPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-connectPLC.obj `if test -f '$(top_srcdir)/src/connectPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/connectPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/connectPLC.c'; fi`
+
+zefirod-statePLC.o: $(top_srcdir)/src/statePLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-statePLC.o -MD -MP -MF "$(DEPDIR)/zefirod-statePLC.Tpo" -c -o zefirod-statePLC.o `test -f '$(top_srcdir)/src/statePLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/statePLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-statePLC.Tpo" "$(DEPDIR)/zefirod-statePLC.Po"; else rm -f "$(DEPDIR)/zefirod-statePLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/statePLC.c' object='zefirod-statePLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-statePLC.o `test -f '$(top_srcdir)/src/statePLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/statePLC.c
+
+zefirod-statePLC.obj: $(top_srcdir)/src/statePLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-statePLC.obj -MD -MP -MF "$(DEPDIR)/zefirod-statePLC.Tpo" -c -o zefirod-statePLC.obj `if test -f '$(top_srcdir)/src/statePLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/statePLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/statePLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-statePLC.Tpo" "$(DEPDIR)/zefirod-statePLC.Po"; else rm -f "$(DEPDIR)/zefirod-statePLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/statePLC.c' object='zefirod-statePLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-statePLC.obj `if test -f '$(top_srcdir)/src/statePLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/statePLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/statePLC.c'; fi`
+
+zefirod-sqlPLC.o: $(top_srcdir)/src/sqlPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-sqlPLC.o -MD -MP -MF "$(DEPDIR)/zefirod-sqlPLC.Tpo" -c -o zefirod-sqlPLC.o `test -f '$(top_srcdir)/src/sqlPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/sqlPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-sqlPLC.Tpo" "$(DEPDIR)/zefirod-sqlPLC.Po"; else rm -f "$(DEPDIR)/zefirod-sqlPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/sqlPLC.c' object='zefirod-sqlPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-sqlPLC.o `test -f '$(top_srcdir)/src/sqlPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/sqlPLC.c
+
+zefirod-sqlPLC.obj: $(top_srcdir)/src/sqlPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-sqlPLC.obj -MD -MP -MF "$(DEPDIR)/zefirod-sqlPLC.Tpo" -c -o zefirod-sqlPLC.obj `if test -f '$(top_srcdir)/src/sqlPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/sqlPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/sqlPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-sqlPLC.Tpo" "$(DEPDIR)/zefirod-sqlPLC.Po"; else rm -f "$(DEPDIR)/zefirod-sqlPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/sqlPLC.c' object='zefirod-sqlPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-sqlPLC.obj `if test -f '$(top_srcdir)/src/sqlPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/sqlPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/sqlPLC.c'; fi`
+
+zefirod-threadPLC.o: $(top_srcdir)/src/threadPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-threadPLC.o -MD -MP -MF "$(DEPDIR)/zefirod-threadPLC.Tpo" -c -o zefirod-threadPLC.o `test -f '$(top_srcdir)/src/threadPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/threadPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-threadPLC.Tpo" "$(DEPDIR)/zefirod-threadPLC.Po"; else rm -f "$(DEPDIR)/zefirod-threadPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/threadPLC.c' object='zefirod-threadPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-threadPLC.o `test -f '$(top_srcdir)/src/threadPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/threadPLC.c
+
+zefirod-threadPLC.obj: $(top_srcdir)/src/threadPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT zefirod-threadPLC.obj -MD -MP -MF "$(DEPDIR)/zefirod-threadPLC.Tpo" -c -o zefirod-threadPLC.obj `if test -f '$(top_srcdir)/src/threadPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/threadPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/threadPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/zefirod-threadPLC.Tpo" "$(DEPDIR)/zefirod-threadPLC.Po"; else rm -f "$(DEPDIR)/zefirod-threadPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/threadPLC.c' object='zefirod-threadPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(zefirod_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zefirod-threadPLC.obj `if test -f '$(top_srcdir)/src/threadPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/threadPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/threadPLC.c'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)

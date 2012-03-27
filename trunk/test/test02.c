@@ -157,10 +157,10 @@ main (void)
     }
 
   // LIVEQ input parameters
-  vmax = 0,
-  vmin = 0,
-  iv = 0;
-  id = 1;
+  vmax = 0,	// SHOULD BE CALCULATED
+  vmin = 0,	// SHOULD BE CALCULATED
+  iv = 0;	// SHOULD BE CALCULATED 
+  id = 1;	// PLC's index
   printf ("value ('q' to quit): ");
   while (scanf ("%d", &value))
     {
