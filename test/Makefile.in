@@ -44,7 +44,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-noinst_PROGRAMS = test01$(EXEEXT) test02$(EXEEXT)
+noinst_PROGRAMS = test01$(EXEEXT) test02$(EXEEXT) test03$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -63,6 +63,9 @@ am_test02_OBJECTS = test02-test02.$(OBJEXT) test02-statePLC.$(OBJEXT) \
 	test02-sqlPLC.$(OBJEXT)
 test02_OBJECTS = $(am_test02_OBJECTS)
 test02_DEPENDENCIES =
+am_test03_OBJECTS = test03-test03.$(OBJEXT) test03-threadPLC.$(OBJEXT)
+test03_OBJECTS = $(am_test03_OBJECTS)
+test03_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -70,8 +73,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(test01_SOURCES) $(test02_SOURCES)
-DIST_SOURCES = $(test01_SOURCES) $(test02_SOURCES)
+SOURCES = $(test01_SOURCES) $(test02_SOURCES) $(test03_SOURCES)
+DIST_SOURCES = $(test01_SOURCES) $(test02_SOURCES) $(test03_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -149,6 +152,9 @@ test01_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
 test02_SOURCES = test02.c $(top_srcdir)/src/statePLC.c $(top_srcdir)/src/sqlPLC.c
 test02_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include/mysql -DLINUX
 test02_LDADD = -L/usr/lib64/mysql -lmysqlclient_r -lpthread -lm -lrt -lssl -lcrypto -ldl
+test03_SOURCES = test03.c $(top_srcdir)/src/threadPLC.c
+test03_CPPFLAGS = -I$(top_srcdir)/include -DLINUX
+test03_LDADD = -lpthread -lrt
 all: all-am
 
 .SUFFIXES:
@@ -191,6 +197,9 @@ test01$(EXEEXT): $(test01_OBJECTS) $(test01_DEPENDENCIES)
 test02$(EXEEXT): $(test02_OBJECTS) $(test02_DEPENDENCIES) 
 	@rm -f test02$(EXEEXT)
 	$(LINK) $(test02_LDFLAGS) $(test02_OBJECTS) $(test02_LDADD) $(LIBS)
+test03$(EXEEXT): $(test03_OBJECTS) $(test03_DEPENDENCIES) 
+	@rm -f test03$(EXEEXT)
+	$(LINK) $(test03_LDFLAGS) $(test03_OBJECTS) $(test03_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -203,6 +212,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-sqlPLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-statePLC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test02-test02.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test03-test03.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test03-threadPLC.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -287,6 +298,34 @@ test02-sqlPLC.obj: $(top_srcdir)/src/sqlPLC.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/sqlPLC.c' object='test02-sqlPLC.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test02_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test02-sqlPLC.obj `if test -f '$(top_srcdir)/src/sqlPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/sqlPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/sqlPLC.c'; fi`
+
+test03-test03.o: test03.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test03-test03.o -MD -MP -MF "$(DEPDIR)/test03-test03.Tpo" -c -o test03-test03.o `test -f 'test03.c' || echo '$(srcdir)/'`test03.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test03-test03.Tpo" "$(DEPDIR)/test03-test03.Po"; else rm -f "$(DEPDIR)/test03-test03.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test03.c' object='test03-test03.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test03-test03.o `test -f 'test03.c' || echo '$(srcdir)/'`test03.c
+
+test03-test03.obj: test03.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test03-test03.obj -MD -MP -MF "$(DEPDIR)/test03-test03.Tpo" -c -o test03-test03.obj `if test -f 'test03.c'; then $(CYGPATH_W) 'test03.c'; else $(CYGPATH_W) '$(srcdir)/test03.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test03-test03.Tpo" "$(DEPDIR)/test03-test03.Po"; else rm -f "$(DEPDIR)/test03-test03.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test03.c' object='test03-test03.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test03-test03.obj `if test -f 'test03.c'; then $(CYGPATH_W) 'test03.c'; else $(CYGPATH_W) '$(srcdir)/test03.c'; fi`
+
+test03-threadPLC.o: $(top_srcdir)/src/threadPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test03-threadPLC.o -MD -MP -MF "$(DEPDIR)/test03-threadPLC.Tpo" -c -o test03-threadPLC.o `test -f '$(top_srcdir)/src/threadPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/threadPLC.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test03-threadPLC.Tpo" "$(DEPDIR)/test03-threadPLC.Po"; else rm -f "$(DEPDIR)/test03-threadPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/threadPLC.c' object='test03-threadPLC.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test03-threadPLC.o `test -f '$(top_srcdir)/src/threadPLC.c' || echo '$(srcdir)/'`$(top_srcdir)/src/threadPLC.c
+
+test03-threadPLC.obj: $(top_srcdir)/src/threadPLC.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test03-threadPLC.obj -MD -MP -MF "$(DEPDIR)/test03-threadPLC.Tpo" -c -o test03-threadPLC.obj `if test -f '$(top_srcdir)/src/threadPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/threadPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/threadPLC.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test03-threadPLC.Tpo" "$(DEPDIR)/test03-threadPLC.Po"; else rm -f "$(DEPDIR)/test03-threadPLC.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/src/threadPLC.c' object='test03-threadPLC.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test03_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test03-threadPLC.obj `if test -f '$(top_srcdir)/src/threadPLC.c'; then $(CYGPATH_W) '$(top_srcdir)/src/threadPLC.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/threadPLC.c'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)

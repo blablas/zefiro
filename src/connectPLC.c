@@ -23,38 +23,17 @@
 #include <stdio.h>
 #include "connectPLC.h"
 
-//int 
-//plcIP (const int index, char *ip)
-//{
-//  int ilast;
-//  char *slast;
-//
-//  slast = strrchr (IP_BASE_ADDR, '.') + 1;
-//  ilast = atoi (slast) + index - 1;
-//  strncpy(ip, IP_BASE_ADDR, strlen (IP_BASE_ADDR) - strlen (slast));
-//  return sprintf(ip, "%s%d", ip, ilast);
-//}
-
 int 
 plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
 {
   _daveOSserialType fds;
   int j, optval, fail = daveResTimeout;
-//  char *ip;
 
 #ifdef DEBUG
   daveSetDebug (daveDebugAll);
 #endif
-  // get ip address for PLC n° i
-//  ip = malloc ((strlen (IP_BASE_ADDR) + 1) * sizeof (char));
-//  if (ip == NULL)
-//    return fail;
-//  if (plcIP (i, ip) < 0) 
-//    return fail;
-
   // open a TCP on ISO connection with PLC
   fds.rfd = openSocket (102, ip, TIMEOUT);
-  //fds.rfd = openSocket (102, ip);
   fds.wfd = fds.rfd;
 
   // connect to the PLC

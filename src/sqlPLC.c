@@ -19,6 +19,7 @@
 #include <config.h>
 #endif
 #include <string.h>
+#include <time.h>
 #include "sqlPLC.h"
 
 int

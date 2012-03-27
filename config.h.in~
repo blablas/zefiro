@@ -21,11 +21,11 @@
 /* "Debug enabled" */
 #undef DEBUG
 
+/* Define to 1 if you have the `mysqlclient_r' library (-lmysqlclient_r). */
+#undef HAVE_LIBMYSQLCLIENT_R
+
 /* Define to 1 if you have the `nodave' library (-lnodave). */
 #undef HAVE_LIBNODAVE
-
-/* PLC's base address */
-#undef IP_BASE_ADDR
 
 /* Max sampling interval for media calculation */
 #undef MAX
@@ -35,9 +35,6 @@
 
 /* MPI's address */
 #undef MPI_ADDR
-
-/* Number of PLCs */
-#undef NPLC
 
 /* Name of package */
 #undef PACKAGE

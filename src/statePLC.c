@@ -31,8 +31,6 @@ const runState runStateTbl[] = {
 };
 
 // PLC's state table
-//static struct stateDsc sDummy = { Z, 0, 0, 0, runStateDummy };
-//stateDscPtr stateDscTbl[] = { (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy, (stateDscPtr)&sDummy };
 stateDscPtr stateDscTbl[] = { NULL, NULL, NULL, NULL, NULL };
 
 // find PLC's next and previous state 
