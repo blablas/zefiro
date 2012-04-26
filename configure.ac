@@ -23,20 +23,6 @@ AC_ARG_WITH([timeout],
                 [with_timeout=5])
 AC_DEFINE_UNQUOTED([TIMEOUT], [$with_timeout], [PLC's connection timeout (in seconds)])
 
-AC_ARG_WITH([max-samples],
-                [AS_HELP_STRING([--with-max-samples],
-                [Max sampling interval for media calculation [default=10]])],
-                [with_max=$withval],
-                [with_max=10])
-AC_DEFINE_UNQUOTED([MAX], [$with_max], [Max sampling interval for media calculation])
-
-AC_ARG_WITH([min-samples],
-                [AS_HELP_STRING([--with-min-samples],
-                [Min sampling interval for media calculation [default=5]])],
-                [with_min=$withval],
-                [with_min=5])
-AC_DEFINE_UNQUOTED([MIN], [$with_min], [Min sampling interval for media calculation])
-
 AC_ARG_ENABLE([debug],
                 [AS_HELP_STRING([--enable-debug],
                 [enable debug mode (don't use in production) [default=no]])],
@@ -60,8 +46,8 @@ AC_CONFIG_FILES([
    scripts/Makefile
 ])
 AC_CONFIG_FILES([scripts/zefirod], [chmod o+x scripts/zefirod])
-AC_CONFIG_FILES([scripts/zefirod.check], [chmod o+x scripts/zefirod.check])
-AC_CONFIG_FILES([scripts/zefirod.mail])
-AC_CONFIG_FILES([scripts/zefirod.crontab])
+#AC_CONFIG_FILES([scripts/zefirod.check], [chmod o+x scripts/zefirod.check])
+#AC_CONFIG_FILES([scripts/zefirod.mail])
+#AC_CONFIG_FILES([scripts/zefirod.crontab])
 
 AC_OUTPUT

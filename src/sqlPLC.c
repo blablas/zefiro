@@ -25,17 +25,22 @@
 int
 sqlConnect (MYSQL **conn, my_bool autoCommit)
 {
+  my_bool reconnect = 1;
+
   if (*conn = mysql_init (NULL))
-    if (!(mysql_real_connect (*conn,
-			    DBHOST,		 
-			    DBUSER,		 
-			    DBPWD,		 
-			    DBNAME,			 
-			    0,			 
-			    NULL,			 
-			    0)))
-      if (!(mysql_autocommit (*conn, autoCommit)))
-	return 0;
+    {
+      //mysql_options(*conn, MYSQL_OPT_RECONNECT, &reconnect);
+      if (!(mysql_real_connect (*conn,
+			      DBHOST,		 
+			      DBUSER,		 
+			      DBPWD,		 
+			      DBNAME,			 
+			      0,			 
+			      NULL,			 
+			      0)))
+	if (!(mysql_autocommit (*conn, autoCommit)))
+	  return 0;
+    }
   return mysql_errno (*conn);
 }
 

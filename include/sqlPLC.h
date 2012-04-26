@@ -18,11 +18,15 @@
 #ifndef SQLPLC_H
 #define SQLPLC_H
 #include <mysql.h>
+#include <errmsg.h>
 
 #define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip) FROM registry where en = 1"
+#define SET_PLC_SATUS		"UPDATE registry set sts = ? WHERE id = ?"
 #define SELECT_ENABLE_LEVELS 	"SELECT id, vp, vmax, vmin, iv, up, do, hys FROM windLevels where en = 1"
 #define UPDATE_LIVE_DTA		"UPDATE windLiveValues SET vp = ?, vmax = ?, vmin = ?, iv = ?, ts = now(), lvl = ? WHERE id = ?"
-#define GET_LEVEL_PARAM		"SELECT id FROM windLevelParam WHERE en = 1"
+#define INIT_LIVE_DTA		"INSERT INTO windLiveValues (id, lvl) VALUES (?, 0)"
+#define CLEAR_LIVE_DTA		"DELETE FROM windLiveValues WHERE id = ?"
+#define GET_CONF_PARAMS		"SELECT min, max, CAST(lvl AS UNSIGNED), nretry FROM configParams"
 #define ENABLE_LOG		"ALTER EVENT logWindLiveValues ENABLE"
 #define DISABLE_LOG		"ALTER EVENT logWindLiveValues DISABLE"
 extern int sqlConnect (MYSQL **conn, my_bool autoCommit);

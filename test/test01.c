@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include "connectPLC.h"
 
+#define	MAX 	10
+
 typedef struct 
 {
   int data[MAX];
