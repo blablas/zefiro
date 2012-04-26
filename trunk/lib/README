@@ -1,1 +1,1 @@
-openSocket.c and openSocket.h been modified to add timeout in openSocket function (see comments)!
+openSocket.c and openSocket.h been modified to add timeout (seconds) in openSocket function (see comments in openSocket.c/h)!

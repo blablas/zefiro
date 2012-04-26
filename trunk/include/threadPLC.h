@@ -25,11 +25,12 @@ typedef struct periodDsc * periodDscPtr;
 
 // PLC's periodc API
 extern periodDscPtr make_periodic (const int unsigned period, const int unsigned sig);
-extern int wait_period (periodDscPtr pDsc);
+extern int wait_period (periodDscPtr pDsc, int *rsig);
 
 struct periodDsc
 {
   int sig;
+  timer_t timerId;
   sigset_t timerMask;
 };
 #endif

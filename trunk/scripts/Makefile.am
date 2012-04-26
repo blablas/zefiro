@@ -9,12 +9,12 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 initdir = /etc/init.d
-crondir = /etc/cron.d
-cron_DATA = zefirod.crontab
-sbin_SCRIPTS = zefirod.check
+#crondir = /etc/cron.d
+#cron_DATA = zefirod.crontab
+#sbin_SCRIPTS = zefirod.check
 noinst_SCRIPTS = zefirod 
-sysconf_DATA = zefirod.mail
-CLEANFILES = $(sbin_SCRIPTS) $(noinst_SCRIPTS) $(sysconf_DATA) $(cron_DATA)
+#sysconf_DATA = zefirod.mail
+CLEANFILES = $(sbin_SCRIPTS) $(noinst_SCRIPTS) #$(sysconf_DATA) $(cron_DATA)
 
 install-exec-local:
 	cp -af $(noinst_SCRIPTS) $(initdir) && \

@@ -23,7 +23,6 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <pwd.h> 
-#include <signal.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <string.h>
@@ -37,18 +36,39 @@
 #include "threadPLC.h"
 #include "connectPLC.h"
 
+#define EXIT_SUCCESS 	0
+#define EXIT_FAILURE 	1
+
 typedef struct pData * pDataPtr;
+typedef enum {UNK, RUN, STP, ERR} pStatus; 
 
 struct pData {
     int id;
     char ip[15];
+    int sig;
+    int *vList;
+    int first;
+    int last;
+    int min;
+    int max;
+    int avg;
 };
 
 extern void daemonize (const char *pidfile);
+extern void processData (pDataPtr plc, const int value);
 extern pDataPtr* initPlcsData (MYSQL * conn, int *len);
+extern void freePlcsData (pDataPtr *dta, const int len);
 extern int initWindLevels (MYSQL *conn);
+extern int initWindLevelParam (MYSQL *conn);
 extern int setBackLog (MYSQL *conn, const bool enable);
+extern int setLiveDta (MYSQL *conn, const int unsigned id, const bool enable);
+extern int setPlcState (MYSQL *conn, const int unsigned id, const unsigned int status);
+extern void* doWork (void *argv);
 
 extern int lfp;
 extern char *pidfile;
+extern unsigned int LPARAM, 
+       MIN, 
+       MAX, 
+       NRETRY;
 #endif

@@ -16,14 +16,10 @@ void *tFunc (void *argv)
   while (pd)
     {
       printf ("thread %d, go to sleep waiting for signal %d\n", pthread_self(), *((int *)argv));
-      rsig = wait_period (pd);
+      wait_period (pd, &rsig);
       printf ("thread %d signal received: %d\n", pthread_self(), rsig);
     }
-}
-
-void
-handler (int signum)
-{
+  free (pd);
 }
 
 int
@@ -31,7 +27,7 @@ main (void)
 {
   pthread_t plc[NTHREAD];
   sigset_t timerMask, waitMask;
-  struct sigaction saio;
+  //struct sigaction saio;
   int i, sig[NTHREAD], rsig;
 
   // mask SIGRT signals for all threads
@@ -51,11 +47,6 @@ main (void)
       else ("thread %d created\n", plc[i]);
     }
 
-  saio.sa_handler = handler;
-  saio.sa_flags = 0;
-  saio.sa_restorer = NULL;
-  sigaction (SIGCHLD, &saio, NULL);
-  // set mask for sigwait
   sigemptyset (&waitMask);
   sigaddset (&waitMask, SIGCHLD); 
   sigwait (&waitMask, &rsig);

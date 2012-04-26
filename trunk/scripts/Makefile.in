@@ -24,7 +24,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -47,31 +46,17 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = scripts
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/zefirod.check.in $(srcdir)/zefirod.crontab.in \
-	$(srcdir)/zefirod.in $(srcdir)/zefirod.mail.in
+	$(srcdir)/zefirod.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = zefirod zefirod.check zefirod.mail \
-	zefirod.crontab
-am__installdirs = "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(crondir)" \
-	"$(DESTDIR)$(sysconfdir)"
-sbinSCRIPT_INSTALL = $(INSTALL_SCRIPT)
-SCRIPTS = $(noinst_SCRIPTS) $(sbin_SCRIPTS)
+CONFIG_CLEAN_FILES = zefirod
+SCRIPTS = $(noinst_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-cronDATA_INSTALL = $(INSTALL_DATA)
-sysconfDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(cron_DATA) $(sysconf_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -143,12 +128,12 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 initdir = /etc/init.d
-crondir = /etc/cron.d
-cron_DATA = zefirod.crontab
-sbin_SCRIPTS = zefirod.check
+#crondir = /etc/cron.d
+#cron_DATA = zefirod.crontab
+#sbin_SCRIPTS = zefirod.check
 noinst_SCRIPTS = zefirod 
-sysconf_DATA = zefirod.mail
-CLEANFILES = $(sbin_SCRIPTS) $(noinst_SCRIPTS) $(sysconf_DATA) $(cron_DATA)
+#sysconf_DATA = zefirod.mail
+CLEANFILES = $(sbin_SCRIPTS) $(noinst_SCRIPTS) #$(sysconf_DATA) $(cron_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -183,66 +168,7 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 zefirod: $(top_builddir)/config.status $(srcdir)/zefirod.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-zefirod.check: $(top_builddir)/config.status $(srcdir)/zefirod.check.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-zefirod.mail: $(top_builddir)/config.status $(srcdir)/zefirod.mail.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-zefirod.crontab: $(top_builddir)/config.status $(srcdir)/zefirod.crontab.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-install-sbinSCRIPTS: $(sbin_SCRIPTS)
-	@$(NORMAL_INSTALL)
-	test -z "$(sbindir)" || $(mkdir_p) "$(DESTDIR)$(sbindir)"
-	@list='$(sbin_SCRIPTS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  if test -f $$d$$p; then \
-	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	    echo " $(sbinSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(sbindir)/$$f'"; \
-	    $(sbinSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(sbindir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-sbinSCRIPTS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sbin_SCRIPTS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	  echo " rm -f '$(DESTDIR)$(sbindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sbindir)/$$f"; \
-	done
 uninstall-info-am:
-install-cronDATA: $(cron_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(crondir)" || $(mkdir_p) "$(DESTDIR)$(crondir)"
-	@list='$(cron_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(cronDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(crondir)/$$f'"; \
-	  $(cronDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(crondir)/$$f"; \
-	done
-
-uninstall-cronDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(cron_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(crondir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(crondir)/$$f"; \
-	done
-install-sysconfDATA: $(sysconf_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(sysconfdir)" || $(mkdir_p) "$(DESTDIR)$(sysconfdir)"
-	@list='$(sysconf_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(sysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  $(sysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sysconfdir)/$$f"; \
-	done
-
-uninstall-sysconfDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sysconf_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sysconfdir)/$$f"; \
-	done
 tags: TAGS
 TAGS:
 
@@ -279,11 +205,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(SCRIPTS) $(DATA)
+all-am: Makefile $(SCRIPTS)
 installdirs:
-	for dir in "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(crondir)" "$(DESTDIR)$(sysconfdir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -327,10 +250,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-cronDATA
+install-data-am:
 
-install-exec-am: install-exec-local install-sbinSCRIPTS \
-	install-sysconfDATA
+install-exec-am: install-exec-local
 
 install-info: install-info-am
 
@@ -354,20 +276,17 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-cronDATA uninstall-info-am uninstall-local \
-	uninstall-sbinSCRIPTS uninstall-sysconfDATA
+uninstall-am: uninstall-info-am uninstall-local
 
 .PHONY: all all-am check check-am clean clean-generic distclean \
 	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-cronDATA install-data \
-	install-data-am install-exec install-exec-am \
-	install-exec-local install-info install-info-am install-man \
-	install-sbinSCRIPTS install-strip install-sysconfDATA \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-exec-local install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-cronDATA \
-	uninstall-info-am uninstall-local uninstall-sbinSCRIPTS \
-	uninstall-sysconfDATA
+	pdf-am ps ps-am uninstall uninstall-am uninstall-info-am \
+	uninstall-local
 
 
 install-exec-local:

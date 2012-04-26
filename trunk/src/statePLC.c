@@ -123,7 +123,6 @@ runStateA (actualStatePtr actual, const int value)
       if (!(--(actual->ucount)))
 	{
 	  // upgrade actual state...
-	  //actual->state = stateDscTbl[tmp->label + 1];
 	  actual->state = nextState (tmp->label);
 	  // ...and initialize actual state thresholds
 	  actual->ucount = (actual->state)->sup;
@@ -151,7 +150,6 @@ runStateBCD (actualStatePtr actual, const int value)
       if (!(--(actual->ucount)))
 	{
 	  // upgrade actual state...
-	  //actual->state = stateDscTbl[tmp->label + 1];
 	  actual->state = nextState (tmp->label);
 	  // ...and initialize state thresholds
 	  actual->ucount = (actual->state)->sup;
@@ -169,7 +167,6 @@ runStateBCD (actualStatePtr actual, const int value)
 	  if (!(--(actual->dcount)))
 	    {
              // downgrade actual state...
-	     //actual->state = stateDscTbl[tmp->label - 1];
 	     actual->state = prevState (tmp->label);
 	     // ...and set corrisponding thresholds
 	     actual->ucount = (actual->state)->sup;
@@ -205,7 +202,6 @@ runStateE (actualStatePtr actual, const int value)
     if (!(--(actual->dcount)))
       {
 	// downgrade actual state...
-	//actual->state = stateDscTbl[tmp->label - 1];
 	actual->state = prevState (tmp->label);
 	// ...and set corrisponding thresholds
 	actual->ucount = (actual->state)->sup;

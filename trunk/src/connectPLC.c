@@ -27,12 +27,12 @@ int
 plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
 {
   _daveOSserialType fds;
-  int j, optval, fail = daveResTimeout;
+  int j, optval, fail = daveConnectionError;
 
 #ifdef DEBUG
   daveSetDebug (daveDebugAll);
 #endif
-  // open a TCP on ISO connection with PLC
+  // open a TCP on ISO connection with PLC (timeout in seconds)
   fds.rfd = openSocket (102, ip, TIMEOUT);
   fds.wfd = fds.rfd;
 
@@ -43,7 +43,7 @@ plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
       daveSetTimeout (*di, TIMEOUT * 1000000);
       *dc = daveNewConnection (*di, MPI_ADDR, RACK, SLOT);
       if (fail = daveConnectPLC (*dc)) 
-	plcDisconnect (dc, di);
+	closeSocket (fds.rfd);
     }
   return fail;
 }
@@ -51,9 +51,7 @@ plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
 int
 plcDisconnect (daveConnection **dc, daveInterface **di)
 {
-  int fail = daveUnknownError;
-
-  if (!(fail = daveDisconnectPLC(*dc)))
-    return daveDisconnectAdapter(*di);
-  return fail;
+  daveDisconnectPLC(*dc);
+  daveDisconnectAdapter(*di);
+  return closeSocket ((*di)->fd.rfd);
 }
