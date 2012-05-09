@@ -29,9 +29,6 @@ plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
   _daveOSserialType fds;
   int j, optval, fail = daveConnectionError;
 
-#ifdef DEBUG
-  daveSetDebug (daveDebugAll);
-#endif
   // open a TCP on ISO connection with PLC (timeout in seconds)
   fds.rfd = openSocket (102, ip, TIMEOUT);
   fds.wfd = fds.rfd;

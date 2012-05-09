@@ -38,6 +38,7 @@
 
 #define EXIT_SUCCESS 	0
 #define EXIT_FAILURE 	1
+#define MAXWIND 	170
 
 typedef struct pData * pDataPtr;
 typedef enum {UNK, RUN, STP, ERR} pStatus; 
@@ -49,9 +50,15 @@ struct pData {
     int *vList;
     int first;
     int last;
+    int vp1;
+    int vp2;
+    int wgt;
+    int hgt;
+    int pos;
     int min;
     int max;
     int avg;
+    actualStatePtr act;
 };
 
 extern void daemonize (const char *pidfile);

@@ -65,8 +65,10 @@ initActualState (const stateLst state)
       if (asPtr)
 	{
 	  asPtr->state = stateDscTbl[state];
+      	  asPtr->alarm = state;
 	  asPtr->ucount = (asPtr->state)->sup;
 	  asPtr->dcount = (asPtr->state)->low;
+	  asPtr->alevel = asPtr->dcount;
 	}
     }
   return asPtr;
@@ -79,18 +81,18 @@ void disposeActualState (actualStatePtr actual)
 }
 
 stateDscPtr
-add2StateDscTbl (const stateLst pos, const stateLst label, const int il, const int sup, const int low, runState newState)
+add2StateDscTbl (const stateLst pos, const stateLst level, const int il, const int sup, const int low)
 {
   stateDscPtr dsPtr = NULL;
  
   dsPtr = malloc (sizeof (struct stateDsc));
   if (dsPtr)
     {
-      dsPtr->label = label;
+      dsPtr->level = level;
       dsPtr->il = il;
       dsPtr->sup = sup;
       dsPtr->low = low;
-      dsPtr->newState = newState;
+      dsPtr->newState = runStateTbl[level];
       if (stateDscTbl[pos] != NULL)
 	free (stateDscTbl[pos]);
       stateDscTbl[pos] = dsPtr;
@@ -123,17 +125,36 @@ runStateA (actualStatePtr actual, const int value)
       if (!(--(actual->ucount)))
 	{
 	  // upgrade actual state...
-	  actual->state = nextState (tmp->label);
-	  // ...and initialize actual state thresholds
+	  actual->state = nextState (tmp->level);
+	  // upgrade alarm state...
+	  actual->alarm = actual->state->level;
+	  // ...initialize actual state thresholds...
 	  actual->ucount = (actual->state)->sup;
 	  actual->dcount = (actual->state)->low;
+	  // ...and alarm level
+	  actual->alevel = actual->dcount;
 	}
     }
     // value <= instant threshold
-    else 
-      // reset upgrade counter to sup threshold
-      actual->ucount = tmp->sup;
-  return (actual->state)->label;
+  else 
+    // reset upgrade counter to sup threshold
+    actual->ucount = tmp->sup;
+
+  // valutate alarm level...
+  // ...if 0, downgrade alarm state to actual state...
+  if (!actual->alevel)
+    {
+      actual->alarm = actual->state->level;
+      actual->alevel = actual->dcount;
+    }
+  // ...otherwise... 
+  else
+    // ...if actual state < alarm state...
+    if (actual->state->level < actual->alarm)
+      // ...decrease alarm level
+      actual->alevel--;
+
+  return (actual->state)->level;
 }
 
 stateLst  
@@ -150,16 +171,20 @@ runStateBCD (actualStatePtr actual, const int value)
       if (!(--(actual->ucount)))
 	{
 	  // upgrade actual state...
-	  actual->state = nextState (tmp->label);
-	  // ...and initialize state thresholds
+	  actual->state = nextState (tmp->level);
+	  // upgrade alarm state...
+	  actual->alarm = actual->state->level;
+	  // ...and initialize state thresholds...
 	  actual->ucount = (actual->state)->sup;
 	  actual->dcount = (actual->state)->low;
+	  // ...and alarm level
+	  actual->alevel = actual->dcount;
 	}
     }
   else 
     {
       // value <= previuos instant threshold
-      if (value <= stateDscTbl[tmp->label - 1]->il)
+      if (value <= (prevState (tmp->level))->il)
 	{
 	  //reset upgrade counter to sup threshold
 	  actual->ucount = tmp->sup;
@@ -167,7 +192,7 @@ runStateBCD (actualStatePtr actual, const int value)
 	  if (!(--(actual->dcount)))
 	    {
              // downgrade actual state...
-	     actual->state = prevState (tmp->label);
+	     actual->state = prevState (tmp->level);
 	     // ...and set corrisponding thresholds
 	     actual->ucount = (actual->state)->sup;
 	     actual->dcount = (actual->state)->low;	      
@@ -182,13 +207,28 @@ runStateBCD (actualStatePtr actual, const int value)
           actual->dcount = tmp->low;	  
 	}
     }
-  return (actual->state)->label;
+
+  // valutate alarm level...
+  // ...if 0, downgrade alarm state to actual state...
+  if (!actual->alevel)
+    {
+      actual->alarm = actual->state->level;
+      actual->alevel = actual->dcount;
+    }
+  // ...otherwise... 
+  else
+    // ...if actual state < alarm state...
+    if (actual->state->level < actual->alarm)
+      // ...decrease alarm level
+      actual->alevel--;
+
+  return (actual->state)->level;
 }
 
 stateLst  
 runStateDummy (actualStatePtr actual, const int value)
 {
-  return Z;
+  return (actual->state)->level;
 }
 
 stateLst  
@@ -198,14 +238,19 @@ runStateE (actualStatePtr actual, const int value)
 
   // value < istant threshold
   if (value < tmp->il)
-    // if downgrade counter fires...
-    if (!(--(actual->dcount)))
-      {
-	// downgrade actual state...
-	actual->state = prevState (tmp->label);
-	// ...and set corrisponding thresholds
-	actual->ucount = (actual->state)->sup;
-	actual->dcount = (actual->state)->low;
-      }
-  return (actual->state)->label;
+    {
+      // if downgrade counter fires...
+      if (!(--(actual->dcount)))
+	{
+	  // downgrade actual state...
+	  actual->state = prevState (tmp->level);
+	  // ...and set corrisponding thresholds
+	  actual->ucount = (actual->state)->sup;
+	  actual->dcount = (actual->state)->low;
+	}
+    }
+  else 
+    // reset downgrade counter to low threshold
+    actual->dcount = tmp->low;
+  return (actual->state)->level;
 }

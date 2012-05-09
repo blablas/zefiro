@@ -24,12 +24,6 @@
 /* Define to 1 if you have the `nodave' library (-lnodave). */
 #undef HAVE_LIBNODAVE
 
-/* Max sampling interval for media calculation */
-#undef MAX
-
-/* Min sampling interval for media calculation */
-#undef MIN
-
 /* MPI's address */
 #undef MPI_ADDR
 
@@ -50,6 +44,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* PLC's sampling period (in seconds) */
+#undef PERIOD
 
 /* Rack number */
 #undef RACK
