@@ -30,8 +30,8 @@ typedef stateLst (*runState) (actualStatePtr , const int);
 // PLC's state descriptor
 struct stateDsc
 {
-  // state label
-  stateLst label; 
+  // state level
+  stateLst level; 
   // instant state level
   int il;
   // state's upgrade threshold
@@ -47,10 +47,14 @@ struct actualState
 {
   // actual state descriptor
   stateDscPtr state;
+  // alarm level
+  stateLst alarm;
   // actual state's upgrade level
   int ucount;
   // actual state's downgrade level
   int dcount;
+  // alarm's downgrade level
+  int alevel;
 }; 
 
 // PLC's state functions table
@@ -70,15 +74,14 @@ extern stateLst runStateDummy (actualStatePtr plc,
 			       const int data);
 
 // PLC's actual state initialization and finalization functions
-extern actualStatePtr initActualState (stateLst state);
+extern actualStatePtr initActualState (const stateLst state);
 extern void disposeActualState (actualStatePtr actual);
 
 // PLC's state descriptor table initialization and finalization functions
 extern stateDscPtr add2StateDscTbl (const stateLst pos, 
-				       const stateLst label, 
+				       const stateLst level, 
 				       const int il, 
 				       const int sup, 
-				       const int low, 
-				       runState newState);
+				       const int low);
 extern void resetStateDscTbl (void);
 #endif

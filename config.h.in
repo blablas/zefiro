@@ -1,13 +1,19 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* PLC's alarm area */
+#undef AAREA
+
+/* PLC's alarm area length */
+#undef ALEN
+
+/* PLC's alarm sampling period (in seconds) */
+#undef APERIOD
+
 /* PLC's data area */
 #undef DAREA
 
 /* PLC's DB host */
 #undef DBHOST
-
-/* PLC's data area length */
-#undef DBLEN
 
 /* PLC's DB */
 #undef DBNAME
@@ -20,6 +26,12 @@
 
 /* "Debug enabled" */
 #undef DEBUG
+
+/* PLC's data area length */
+#undef DLEN
+
+/* PLC's data sampling period (in seconds) */
+#undef DPERIOD
 
 /* Define to 1 if you have the `nodave' library (-lnodave). */
 #undef HAVE_LIBNODAVE

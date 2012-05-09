@@ -98,7 +98,7 @@ main (void)
     {
       if (pos == (rows - 1))
 	pos = E;
-      add2StateDscTbl (pos, id, vp, sup, low, runStateTbl[pos]);	// state level: could be one among vp, vmax, vmin, iv
+      add2StateDscTbl (pos, id, vp, sup, low);	// state level: could be one among vp, vmax, vmin, iv
       printf ("level: id(%d), vp(%d), up(%d), do(%d), hys(%d), fun(%d)\n", id, vp, sup, low, hys, pos); 
       pos++;
     }
@@ -164,7 +164,7 @@ main (void)
   printf ("value ('q' to quit): ");
   while (scanf ("%d", &value))
     {
-      lvl = (actual->state)->newState (actual, value);
+      lvl = actual->state->newState (actual, value);
       if (sqlExecStmt (stmt))
 	{
 	  printf ("sqlExecStmt (U): %d\n", res);
@@ -172,6 +172,7 @@ main (void)
 	}
       printf ("effected rows: %d\n", mysql_stmt_affected_rows (stmt));
       printf ("new state: level(%d), up counter(%d), down counter(%d)\n", lvl, actual->ucount, actual->dcount); 
+      printf ("new alarm: level(%d), down counter(%d)\n", actual->alarm, actual->alevel); 
       printf ("value ('q' to quit): ");
     }
 

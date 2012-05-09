@@ -84,7 +84,7 @@ daemonize (const char *pidfile)
       close (lfp);
       // wait for termination signals (SIGTERM, SIGCHLD)
       sigwait (&childMask, &rsig);
-      exit (EXIT_FAILURE);
+      exit (EXIT_SUCCESS);
     }
 
   // At this point we are executing as the child process 
@@ -101,8 +101,8 @@ daemonize (const char *pidfile)
 	      errno, strerror (errno));
       exit (EXIT_FAILURE);
     }
-  //   Change the current working directory.  This prevents the current
-  //   directory from being locked; hence not being able to remove it. 
+  // Change the current working directory.  This prevents the current
+  // directory from being locked; hence not being able to remove it. 
   if ((chdir ("/")) < 0)
     {
       syslog (LOG_ERR, "unable to change directory to %s, code %d (%s)",
@@ -131,20 +131,19 @@ processData (pDataPtr plc, const int value)
 {
   int i;
 
-  if (plc->min == plc->vList[plc->first])
-    plc->min = 666;
-  if (plc->max == plc->vList[plc->first])
-    plc->max = -1;
+  plc->min = 666;
+  plc->max = -1;
+  plc->avg = 0;
   // new value for last index
   plc->last = (plc->last + 1) % MAX; 
-  if (plc->vList[plc->first] > 0)
+  if (plc->vList[plc->first] >= 0)
     // MAX element queue 
     if (plc->last == plc->first) 
       // new value form first index
       plc->first = (plc->first + 1) % MAX;
   // insert value
   plc->vList[plc->last] = value;
-  if (plc->vList[plc->last + 1 % MAX] > 0)
+  if (plc->vList[(plc->last + 1) % MAX] >= 0)
     {
       // Calculate min, max, avg
       for (i = 0; i < MAX; i++)
@@ -222,9 +221,15 @@ initPlcsData (MYSQL *conn, int *len)
 			}
 		      dta[pos]->first = 0;
 		      dta[pos]->last = MAX - 1; 
+		      dta[pos]->vp1 = 0;
+		      dta[pos]->vp2 = 0;
+		      dta[pos]->wgt = 0;
+		      dta[pos]->hgt = 0;
 		      dta[pos]->min = 666;
 		      dta[pos]->max = -1;
 		      dta[pos]->avg = 0.0;
+		      // initialize activity state to level A
+		      dta[pos]->act = initActualState (A);  
 		    }
 		  else
 		    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, strerror (errno));
@@ -246,6 +251,7 @@ freePlcsData (pDataPtr *dta, const int len)
   for (i = 0; i < len; i++)
     {
       free (dta[i]->vList);
+      disposeActualState (dta[i]->act);
       free (dta[i]);
     }
   free (dta);
@@ -375,9 +381,8 @@ initWindLevels (MYSQL *conn)
 		{
 		  if (pos == (rows - 1))
 		    pos = E;
-		  if (!add2StateDscTbl (pos, id, vp, sup, low, runStateTbl[pos]))
-		    syslog (LOG_ERR, 
-			    "error in add2StateDscTbl (file %s at line %d): cannot add state descriptor at position %d", 
+		  if (!add2StateDscTbl (pos, id, vp, sup/DPERIOD, low/DPERIOD))
+		    syslog (LOG_ERR, "error in add2StateDscTbl (file %s at line %d): cannot add state descriptor at position %d", 
 			    __FILE__, __LINE__, pos); 
 		  pos++;
 		}
@@ -490,19 +495,15 @@ doWork (void *argv)
   bool exit = false;
   int *value;
   int res,
+      vp,
+      level,
       disconnect = 1,
       // signal received in sigwait (SIGRTMIN based or SIGTERM)
       rsig,
+      aperiod = APERIOD,
       plcErr = 0,
-      sqlErr = 0,
-      //  UPDATE_LIVE_DTA input parameters
-      vp = 0,
-      vmax = 0,
-      vmin = 0,
-      iv = 0,
-      lvl = 0;
+      sqlErr = 0;
   periodDscPtr pd;
-  actualStatePtr actual;
   daveConnection *dc;
   daveInterface *di;
   pDataPtr dta;
@@ -514,8 +515,6 @@ doWork (void *argv)
       pthread_exit (NULL);
     }
   dta = (pDataPtr) argv;
-  // initialize state machine lowest state (could be <> A!)
-  actual = initActualState (A);  
   // get wind level parameter
   switch (LPARAM)
     {
@@ -563,7 +562,7 @@ doWork (void *argv)
       paramU[3].is_unsigned = 1;
       // 'lvl'
       paramU[4].buffer_type = MYSQL_TYPE_TINY;
-      paramU[4].buffer = (void *)&lvl;
+      paramU[4].buffer = (void *)&(level);
       paramU[4].is_null = 0;
       paramU[4].is_unsigned = 0;      
       // 'id' 
@@ -575,16 +574,19 @@ doWork (void *argv)
 	syslog (LOG_ERR, "error in %s of thread %s (file %s at line %d): %s", __func__, dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
       else
 	{
-	  // make thread periodic (1 second period)
-	  if (pd = make_periodic (1, dta->sig))
+	  // make thread periodic
+	  if (pd = make_periodic (DPERIOD, dta->sig))
 	    {
 	      // infinte loop 
 	      while (!exit)
 		{
 		  // if disconnected from plc...
 		  if (disconnect)
-		    // ...try to connect!
-		    disconnect = plcConnect (dta->ip, &dc, &di);
+		    {
+		      // ...try to connect!
+		      syslog (LOG_INFO, "connecting to plc...");
+		      disconnect = plcConnect (dta->ip, &dc, &di);
+		    }
 		  // error connecting to plc
 		  if (disconnect)
 		    {
@@ -595,8 +597,19 @@ doWork (void *argv)
 		  // successfull connected...
 		  else 
 		    {
+		      // check if we have to read alarm too...
+		      aperiod--;
 		      // ...read data from plc...
-		      if (res = daveReadBytes (dc, daveDB, DAREA, 0, DBLEN, NULL))
+		      if (!aperiod)
+			{
+			  res = daveReadBytes (dc, daveDB, DAREA, 0, ALEN + DLEN, NULL);
+			  aperiod = APERIOD;
+//			  res = 0;
+			}
+		      else
+			res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN, NULL);
+//		        res = 0;
+		      if (res)
 			// ...error reading...
 			{
 			  // ...increment error count...
@@ -606,8 +619,9 @@ doWork (void *argv)
 			  // ...if conection error to plc, set disconnect!
 			  if (res == daveResTimeout || res == daveConnectionError)
 			    {
-			      syslog (LOG_INFO, "disconnect from plc");
-			    disconnect = 1;
+			      syslog (LOG_ERR, "disconnecting from plc...");
+			      plcDisconnect (&dc, &di);
+			      disconnect = 1;
 			    }
 			}
 		      // ...successfull read from plc...
@@ -616,14 +630,43 @@ doWork (void *argv)
 			  // ...reset error count...
 			  plcErr = 0;
 			  // ...convert data for storing into mysql data store...
-			  vp = daveGetU16At (dc, 2);
+			  // Anamemoter 1
+			  dta->vp1 = daveGetU16At (dc, 2);
+			  // Anamemoter 2
+			  dta->vp2 = daveGetU16At (dc, 4);
+			  // Spreader's weight
+			  dta->wgt = daveGetU16At (dc, 6);
+			  // Spreader's height
+			  dta->hgt = daveGetS16At (dc, 8);
+			  // Trailer's position
+			  dta->pos = daveGetS16At (dc, 10);
+//			  vp = 1 + (int) (40.0 * (rand() / (RAND_MAX + 1.0)));
+
+			  // get wind data from anemometer 1 if not faulty...
+			  // ...otherwise, get data from anemometr 2 if not faulty...
+			  vp = (dta->vp1 > MAXWIND) ? dta->vp1 : ((dta->vp2 < MAXWIND) ? dta->vp2 : -1);
+			  // ...otherwise exit! 
+			  if (vp < 0)
+			    {
+			      syslog (LOG_ERR, "error %s of thread %s (file %s at line %d): both anemometer are in error",
+				      __func__, dta->ip, __FILE__, __LINE__);
+			      exit = true;
+			    }
 			  // ...calculate min, max and avg (moving average)...
 			  processData (dta, vp);
-			  // ...get anemometer actual state...
-			  lvl = (actual->state)->newState (actual, *value);
+			  // ...get anemometer new state based on value...
+			  level = dta->act->state->newState (dta->act, *value);
 #ifdef DEBUG
-			  syslog (LOG_INFO, "thread %d read value %d, new state: level(%d), up counter(%d), down counter(%d)\n", 
-				  pthread_self(), *value, lvl, actual->ucount, actual->dcount);
+			  syslog (LOG_INFO, "plc %s: vp  %d", dta->ip, vp);
+			  syslog (LOG_INFO, "plc %s: vp1 %d", dta->ip, dta->vp1);
+			  syslog (LOG_INFO, "plc %s: vp2 %d", dta->ip, dta->vp2);
+			  syslog (LOG_INFO, "plc %s: wgt %d", dta->ip, dta->wgt);
+			  syslog (LOG_INFO, "plc %s: hgt %d", dta->ip, dta->hgt);
+			  syslog (LOG_INFO, "plc %s: pos %d", dta->ip, dta->pos);
+			  syslog (LOG_INFO, "plc %s: level(%d), up counter(%d), down counter(%d)", 
+				  dta->ip, dta->act->state->level, dta->act->ucount, dta->act->dcount);
+			  syslog (LOG_INFO, "plc %s: alarm(%d), down counter(%d)", 
+				  dta->ip, dta->act->alarm, dta->act->alevel);
 #endif
 			  // ...update mysql data store...
 			  if (res = sqlExecStmt (stmt))
@@ -651,7 +694,8 @@ doWork (void *argv)
 		    }
 		  // if wait_period fails logg it
 		  else 
-		    syslog (LOG_ERR, "error in %s of thread %s (file %s at line %d): error waiting for next period", __func__, dta->ip, __FILE__, __LINE__);
+		    syslog (LOG_ERR, "error in %s of thread %s (file %s at line %d): error waiting for next period", 
+			    __func__, dta->ip, __FILE__, __LINE__);
 		  // if there were NRETRY consecutive error (plc or sql)...
 		  if (plcErr >= NRETRY || sqlErr >= NRETRY)
 		    {
@@ -659,6 +703,9 @@ doWork (void *argv)
 		      res = plcDisconnect (&dc, &di);
 		      // ...and exit infinite loop
 		      exit = true;
+		      syslog (LOG_ERR, "error in %s of thread %s (file %s at line %d): \ 
+			      reached max number (%d) of error (sql: %d, plc: %d)", 
+			      __func__, dta->ip, __FILE__, __LINE__, NRETRY, sqlErr, plcErr);
 		    }
 		}
 	      // delete periodic timer
@@ -670,8 +717,6 @@ doWork (void *argv)
 	    }
 	}
     }
-  // clear thread data structures
-  disposeActualState (actual);
   if (sqlCloseStmt (&stmt))
     {
       syslog (LOG_ERR, "error in %s of thread %s (file %s at line %d): %s", __func__, dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
@@ -743,16 +788,16 @@ main (int argc, char *argv[])
       mysql_library_end ();
       exit (EXIT_FAILURE);
     }
-  // get working PLC's data
-  if (!(plcsDta = initPlcsData (conn, &NTHS)))
+  // init PLC's state descriptors table
+  if (res = initWindLevels (conn))
     {
       syslog (LOG_CRIT, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
       sqlDisconnect (&conn);
       mysql_library_end ();
       exit (EXIT_FAILURE);
     }
-  // init PLC's state descriptors table
-  if (res = initWindLevels (conn))
+  // get working PLC's data
+  if (!(plcsDta = initPlcsData (conn, &NTHS)))
     {
       syslog (LOG_CRIT, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
       sqlDisconnect (&conn);
@@ -803,7 +848,7 @@ main (int argc, char *argv[])
 		  syslog (LOG_ERR, "error in %s (file %s at line %d): thread %s, %s", __func__, __FILE__, __LINE__, plcsDta[i]->ip, strerror (ESRCH));
 		  died ++;
 		  // check if connection to mysql data store is still up
-		  if (!(res = mysql_ping (conn)))
+		  if (!mysql_ping (conn))
 		    // set thread status to 'ERR'
 		    res = setPlcState (conn, plcsDta[i]->id, ERR);
 		  else
@@ -825,21 +870,25 @@ main (int argc, char *argv[])
 	if (!pthread_kill (plc[i], SIGTERM))
 	  if (!pthread_join (plc[i], NULL))
 	    // check if connection to mysql data store is still up
-	    if (!(res = mysql_ping (conn)))
+	    if (!mysql_ping (conn))
 	      // set thread status to 'STP'
 	      res = setPlcState (conn, plcsDta[i]->id, STP);
 	    else
 	      syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error (conn));
       // check if connection to mysql data store is still up
-      if (!(res = mysql_ping (conn)))
-	// disable backlog of windLiveValues
-	if (res = setBackLog (conn, false))
-	  {
-	    syslog (LOG_CRIT, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
-	    sqlDisconnect (&conn);
-	    mysql_library_end ();
-	    exit (EXIT_FAILURE);
-	  }
+      if (!mysql_ping (conn))
+	{
+	  // disable backlog of windLiveValues
+	  if (res = setBackLog (conn, false))
+	    {
+	      syslog (LOG_CRIT, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
+	      sqlDisconnect (&conn);
+	      mysql_library_end ();
+	      exit (EXIT_FAILURE);
+	    }
+	}
+      else
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error (conn));
     }
   // ...else log that we exited due to critical error
   else

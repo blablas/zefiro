@@ -71,7 +71,7 @@ main (void)
       for (i = 0; i < 60; i++)
 	{
 	  usleep (1000000);
-	  if (res = daveReadBytes (dc, daveDB, DAREA, 0, DBLEN, NULL)) 
+	  if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
 	    {
               printf ("daveReadBytes: %s\n", daveStrerror(res));
 	      if (res = plcDisconnect (&dc, &di))
