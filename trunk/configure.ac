@@ -9,16 +9,16 @@ AC_DEFINE([MPI_ADDR], [2], [MPI's address])
 AC_DEFINE([RACK], [0], [Rack number])
 AC_DEFINE([SLOT], [2], [CPU's slot])
 AC_DEFINE([DAREA], [105], [PLC's data area])
+AC_DEFINE([DLEN], [16], [PLC's data area length])
 AC_DEFINE([AAREA], [123], [PLC's alarm area])
-AC_DEFINE([DLEN], [12], [PLC's data area length])
-AC_DEFINE([ALEN], [38], [PLC's alarm area length])
+AC_DEFINE([ALEN], [19], [PLC's alarm area length])
 AC_DEFINE([RUN_AS_USER], ["root"], [Daemon's user])
 AC_DEFINE([DBHOST], ["localhost"], [PLC's DB host])
 AC_DEFINE([DBNAME], ["PLC"], [PLC's DB])
 AC_DEFINE([DBUSER], ["plcuser"], [PLC's DB user])
 AC_DEFINE([DBPWD], ["plcuser"], [PLC's DB password])
-AC_DEFINE([DPERIOD], [2], [PLC's data sampling period (in seconds)])
-AC_DEFINE([APERIOD], [60], [PLC's alarm sampling period (in seconds)])
+AC_DEFINE([DPERIOD], [1], [PLC's data sampling period (in seconds)])
+AC_DEFINE([APERIOD], [120], [PLC's alarm sampling period (in seconds)])
 
 AC_ARG_WITH([timeout], 
 		[AS_HELP_STRING([--with-timeout],
@@ -36,6 +36,14 @@ AS_IF([test "$enable_debug" != "no"], [
         AC_DEFINE([DEBUG], [1], ["Debug enabled"])
 		  ])
 
+AC_ARG_ENABLE([sampling],
+                [AS_HELP_STRING([--enable-sampling],
+                [enable sampling mode evaluating anemometer level [default=no]])],
+                [enable_sampling=$enableval],
+                [enable_sampling=no])
+AS_IF([test "$enable_sampling" != "no"], [
+        AC_DEFINE([SAMPLING], [1], ["Sampling enabled"])
+		  ])
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
 

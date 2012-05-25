@@ -24,10 +24,11 @@
 #include "connectPLC.h"
 
 int 
-plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
+plcConnect (const char *ip, daveConnection **dc)
 {
   _daveOSserialType fds;
-  int j, optval, fail = daveConnectionError;
+  int j, optval, res;
+  daveInterface *di;
 
   // open a TCP on ISO connection with PLC (timeout in seconds)
   fds.rfd = openSocket (102, ip, TIMEOUT);
@@ -36,19 +37,24 @@ plcConnect (const char *ip, daveConnection **dc, daveInterface **di)
   // connect to the PLC
   if (fds.rfd)
     {
-      *di = daveNewInterface (fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
-      daveSetTimeout (*di, TIMEOUT * 1000000);
-      *dc = daveNewConnection (*di, MPI_ADDR, RACK, SLOT);
-      if (fail = daveConnectPLC (*dc)) 
+      di = daveNewInterface (fds, "IF1", 1, daveProtoISOTCP, daveSpeed187k);
+      *dc = daveNewConnection (di, MPI_ADDR, RACK, SLOT);
+      daveSetTimeout (di, TIMEOUT * 1000000);
+      if (res = daveConnectPLC (*dc)) 
 	closeSocket (fds.rfd);
     }
-  return fail;
+  return res;
 }
 
 int
-plcDisconnect (daveConnection **dc, daveInterface **di)
+plcDisconnect (daveConnection *dc)
 {
-  daveDisconnectPLC(*dc);
-  daveDisconnectAdapter(*di);
-  return closeSocket ((*di)->fd.rfd);
+  int res;
+
+  daveDisconnectPLC (dc);
+  daveDisconnectAdapter (dc->iface);
+  res = closeSocket (dc->iface->fd.rfd);
+  free (dc->iface);
+  free (dc);
+  return res;
 }

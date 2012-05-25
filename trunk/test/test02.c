@@ -20,6 +20,9 @@ main (void)
       iv,
       sup, 
       low,
+      evt,
+      ntv,
+      smp,
       hys,
       lvl,
       ret;
@@ -27,7 +30,7 @@ main (void)
   MYSQL *conn;
   MYSQL_STMT *stmt;
   MYSQL_BIND paramU[6], 
-	     resultSet[8];
+	     resultSet[11];
 
   if (res = sqlConnect (&conn, 1))
     {
@@ -81,6 +84,21 @@ main (void)
   resultSet[7].buffer = (void *)&hys;
   resultSet[7].is_null = 0;
   resultSet[7].is_unsigned = 0; 
+  // 'evt'
+  resultSet[8].buffer_type = MYSQL_TYPE_LONG;
+  resultSet[8].buffer = (void *)&evt;
+  resultSet[8].is_null = 0;
+  resultSet[8].is_unsigned = 0; 
+  // 'ntv'
+  resultSet[9].buffer_type = MYSQL_TYPE_LONG;
+  resultSet[9].buffer = (void *)&ntv;
+  resultSet[9].is_null = 0;
+  resultSet[9].is_unsigned = 0; 
+  // 'smp'
+  resultSet[10].buffer_type = MYSQL_TYPE_LONG;
+  resultSet[10].buffer = (void *)&smp;
+  resultSet[10].is_null = 0;
+  resultSet[10].is_unsigned = 0; 
   if (res = sqlBindResult (stmt, resultSet))
     {
       printf ("sqlBindParam: %d\n", res);
@@ -96,10 +114,10 @@ main (void)
   printf ("effected rows: %d\n", rows);
   while (!mysql_stmt_fetch (stmt))
     {
-      if (pos == (rows - 1))
-	pos = E;
-      add2StateDscTbl (pos, id, vp, sup, low);	// state level: could be one among vp, vmax, vmin, iv
-      printf ("level: id(%d), vp(%d), up(%d), do(%d), hys(%d), fun(%d)\n", id, vp, sup, low, hys, pos); 
+      //if (pos == (rows - 1))
+	//pos = E;
+      add2StateDscTbl (id, id, vp, sup, low, evt, ntv, smp);	// state level: could be one among vp, vmax, vmin, iv
+      printf ("level: id(%d), vp(%d), up(%d), do(%d), hys(%d), evt(%d), ntv(%d), smp(%d), fun(%d)\n", id, vp, sup, low, hys, evt, ntv, smp, id); 
       pos++;
     }
   if (res = sqlCloseStmt (&stmt))
@@ -171,8 +189,12 @@ main (void)
 	  return res;
 	}
       printf ("effected rows: %d\n", mysql_stmt_affected_rows (stmt));
+#ifdef SAMPLING
+      printf ("new state: level(%d), up counter(%d), down counter(%d), events count(%d), interval count(%d), in interval(%d), samples count(%d)\n", 
+	      lvl, actual->ucount, actual->dcount, actual->ecount, actual->icount, actual->processState, actual->scount); 
+#else 
       printf ("new state: level(%d), up counter(%d), down counter(%d)\n", lvl, actual->ucount, actual->dcount); 
-      printf ("new alarm: level(%d), down counter(%d)\n", actual->alarm, actual->alevel); 
+#endif
       printf ("value ('q' to quit): ");
     }
 

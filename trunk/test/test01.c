@@ -57,41 +57,53 @@ initList (plcData *buffer)
 int 
 main (void)
 {
-  int i, vp, res;
-  char *plc = "10.50.3.22";
+  int i, j, vp, res;
+  unsigned char nfo[2];
+  unsigned char alm[19];
+  char *plc = "10.50.3.96";
 
+  daveSetDebug(daveDebugAll);
   daveConnection *dc; 
-  daveInterface *di;
+  //daveInterface *di;
   plcData wlist;
 
   initList (&wlist);
  
-  if (!plcConnect (plc, &dc, &di))
-    {
-      for (i = 0; i < 60; i++)
+  //if (!plcConnect (dc))
+    //{
+  for (i = 0; i < 10; i++) {
+    //printf ("\t\tplcInitConnect\n");
+    //res = plcInitConnect (plc, &dc);
+    printf ("\t\tplcConnect\n");
+    if (!plcConnect (plc, &dc)) {
+      usleep (1000000);
+      printf ("\t\tdaveReadBytes\n");
+      if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
 	{
-	  usleep (1000000);
-	  if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
-	    {
-              printf ("daveReadBytes: %s\n", daveStrerror(res));
-	      if (res = plcDisconnect (&dc, &di))
-		printf ("plcDisconnect: %s\n", daveStrerror(res));
-	      if (res = plcConnect (plc, &dc, &di)) {
-                printf ("plcConnect: %s\n", daveStrerror(res));
-		continue;
-	      }
-	    }
-	  else {
-	    vp = daveGetU16At (dc, 2);
-	    printf ("Vp: %d\n", vp);
-	    insList (&wlist, vp);
-	    printList (&wlist);
-	  }
+	  printf ("daveReadBytes: %s\n", daveStrerror(res));
 	}
-      printf ("Press any key to disconnect");
-      getchar ();
-      if (res = plcDisconnect (&dc, &di))
-	printf ("plcDisconnect (final): %s\n", daveStrerror(res));
+      else {
+	vp = daveGetU16At (dc, 0);
+	/*for (j = 0; j < sizeof (nfo); j++)
+	  {
+	    nfo[j] = daveGetU8At (dc, 14 + (j * sizeof (unsigned char)));
+	    printf ("Nfo[%d]: %u(%d)\n", j, nfo[j], sizeof (nfo));
+	  }
+	for (j = 0; j < sizeof (alm); j++)
+	  {
+	    alm[j] = daveGetU8At (dc, 18 + (j * sizeof (unsigned char)));
+	    printf ("Alm[%d]: %u(%d)\n", j, alm[j], sizeof (alm));
+	  }*/
+	printf ("\t\tVp: %d\n", vp);
+	insList (&wlist, vp);
+	//printList (&wlist);
+      }
+      plcDisconnect (dc);
     }
+  }
+  printf ("Press any key to disconnect");
+  getchar ();
+  //if (res = plcDisconnect (dc))
+    //printf ("plcDisconnect (final): %s\n", daveStrerror(res));
   return vp;
 }

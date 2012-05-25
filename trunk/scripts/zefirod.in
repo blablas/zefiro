@@ -23,8 +23,8 @@
 # Path to server binary, and short-form for messages.
 zefirod=${ZEFIROD-/usr/local/sbin/zefirod}
 prog=zefirod
-pidfile=${PIDFILE-/var/run/zefirod.pid}
-lockfile=${LOCKFILE-/var/lock/subsys/zefirod}
+pidfile=${PIDFILE-/var/run/mysqld/zefirod.pid}
+lockfile=${LOCKFILE-/var/run/mysqld/zefirod.lck}
 RETVAL=0
 
 start() {
@@ -34,6 +34,7 @@ start() {
         echo
         [ $RETVAL = 0 ] && touch ${lockfile} && logger -i -p local5.info $"zefirod daemon started"
         RETVAL=$?
+	chown mysql:mysql ${pidfile} && chown mysql:mysql ${lockfile}
         return $RETVAL
 }
 
