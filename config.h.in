@@ -63,6 +63,9 @@
 /* Daemon's user */
 #undef RUN_AS_USER
 
+/* "Sampling enabled" */
+#undef SAMPLING
+
 /* CPU's slot */
 #undef SLOT
 

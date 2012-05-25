@@ -14,7 +14,7 @@ initdir = /etc/init.d
 #sbin_SCRIPTS = zefirod.check
 noinst_SCRIPTS = zefirod 
 #sysconf_DATA = zefirod.mail
-CLEANFILES = $(sbin_SCRIPTS) $(noinst_SCRIPTS) #$(sysconf_DATA) $(cron_DATA)
+CLEANFILES = $(noinst_SCRIPTS) #$(sbin_SCRIPTS) $(sysconf_DATA) $(cron_DATA)
 
 install-exec-local:
 	cp -af $(noinst_SCRIPTS) $(initdir) && \

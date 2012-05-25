@@ -809,6 +809,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-debug          enable debug mode (don't use in production)
                           [default=no]
+  --enable-sampling       enable sampling mode evaluating anemometer level
+                          [default=no]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
 
@@ -1323,17 +1325,17 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
+@%:@define DLEN 16
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
 @%:@define AAREA 123
 _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-@%:@define DLEN 12
-_ACEOF
-
-
-cat >>confdefs.h <<\_ACEOF
-@%:@define ALEN 38
+@%:@define ALEN 19
 _ACEOF
 
 
@@ -1363,12 +1365,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-@%:@define DPERIOD 2
+@%:@define DPERIOD 1
 _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-@%:@define APERIOD 60
+@%:@define APERIOD 120
 _ACEOF
 
 
@@ -1403,6 +1405,23 @@ _ACEOF
 		  
 fi
 
+
+# Check whether --enable-sampling or --disable-sampling was given.
+if test "${enable_sampling+set}" = set; then
+  enableval="$enable_sampling"
+  enable_sampling=$enableval
+else
+  enable_sampling=no
+fi; 
+if test "$enable_sampling" != "no"; then
+  
+        
+cat >>confdefs.h <<\_ACEOF
+@%:@define SAMPLING 1
+_ACEOF
+
+		  
+fi
 
           ac_config_headers="$ac_config_headers config.h"
 

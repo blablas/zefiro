@@ -17,6 +17,7 @@
 */
 #ifndef STATEPLC_H
 #define STATEPLC_H
+#include <stdbool.h>
 
 // PLC's state enumeration
 typedef enum {A, B, C, D, E, Z} stateLst;
@@ -25,7 +26,7 @@ typedef struct actualState * actualStatePtr;
 typedef struct stateDsc * stateDscPtr;
 
 // state function prototype
-typedef stateLst (*runState) (actualStatePtr , const int);
+typedef stateLst (*runState) (actualStatePtr, const int);
 
 // PLC's state descriptor
 struct stateDsc
@@ -38,6 +39,11 @@ struct stateDsc
   int sup; 
   // state's downgrade threshold
   int low;
+#ifdef SAMPLING
+  int interval;
+  int events;
+  int samples;
+#endif
   // state transition function
   runState newState;  
 };
@@ -47,14 +53,16 @@ struct actualState
 {
   // actual state descriptor
   stateDscPtr state;
-  // alarm level
-  stateLst alarm;
   // actual state's upgrade level
   int ucount;
   // actual state's downgrade level
   int dcount;
-  // alarm's downgrade level
-  int alevel;
+#ifdef SAMPLING
+  int icount;
+  int ecount;
+  int scount;
+  int processState;
+#endif
 }; 
 
 // PLC's state functions table
@@ -82,6 +90,9 @@ extern stateDscPtr add2StateDscTbl (const stateLst pos,
 				       const stateLst level, 
 				       const int il, 
 				       const int sup, 
-				       const int low);
+				       const int low, 
+				       const int evt, 
+				       const int ntv, 
+				       const int smp);
 extern void resetStateDscTbl (void);
 #endif
