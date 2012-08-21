@@ -54,7 +54,6 @@ prevState (stateLst state)
       return stateDscTbl[i - 1];
 }
 
-#ifndef SAMPLING
 inline void
 upgradeState (actualStatePtr actual, stateDscPtr tmp)
 {
@@ -65,7 +64,7 @@ upgradeState (actualStatePtr actual, stateDscPtr tmp)
     {
       // upgrade actual state...
       actual->state = nextState (tmp->level);
-      // ...initialize actual state thresholds...
+      // ...and initialize new actual state's thresholds
       actual->ucount = (actual->state)->sup;
       actual->dcount = (actual->state)->low;
     }
@@ -74,14 +73,14 @@ upgradeState (actualStatePtr actual, stateDscPtr tmp)
 inline void 
 downgradeState (actualStatePtr actual, stateDscPtr tmp)
 {
-  // reset upgrade counter to sup threshold
+  // reset upgrade counter to sup threshold cause we're looking for upgrade!
   actual->ucount = tmp->sup;
   // if downgrade counter fires...
   if (!(--(actual->dcount)))
     {
        // downgrade actual state...
        actual->state = prevState (tmp->level);
-       // ...and set corrisponding thresholds
+       // ...and initialize new actual state's thresholds
        actual->dcount = (actual->state)->low;	      
        actual->ucount = (actual->state)->sup;	      
     }
@@ -95,119 +94,7 @@ resetState (actualStatePtr actual, stateDscPtr tmp)
   // reset downgrade counter to low threshold
   actual->dcount = tmp->low;	  
 }
-#endif
-#ifdef SAMPLING
-inline void
-resetState (actualStatePtr actual, stateDscPtr tmp)
-{
-  // manage reset of upgrade stuff (only if we're actually processing state upgrade!)
-  if (actual->processState)
-    {
-      // ...reset interval counter (cause an event does not occurred)...
-      actual->icount = tmp->interval;
-      // ...reset events counter (cause an event does not occurred)...
-      actual->ecount = tmp->events;
-      // ...reset samples counter (cause an event does not occurred)...
-      actual->scount = tmp->samples;
-    }
-  // if we're counting interval...
-  else
-    // ...if interval counter fires...
-    if (!(--(actual->icount)))
-      {
-        // ...pass in processing state..
-        actual->processState = true;
-	// ...and reload interval counter
-	actual->icount = tmp->interval;
-      }
-  // reset downgrade counter to low threshold
-  actual->dcount = tmp->low;	  
-}
 
-inline void
-upgradeState (actualStatePtr actual, stateDscPtr tmp)
-{
-  // reset downgrade counter to low threshold
-  actual->dcount = tmp->low;
-  // manage state upgrade
-  // if not in process state...
-  if (!(actual->processState))
-    {
-      // ...if interval counter fires...
-      if (!(--(actual->icount)))
-	{
-          // ...pass in processing state..
-	  actual->processState = true;
-	  // ...and reload interval counter
-	  actual->icount = tmp->interval;
-	}
-    }
-  // ...if we're processing state...
-  else
-    {
-      // if samples counter fires...
-      if (!(--(actual->scount)))
-	{
-	  // ...and if events counter fires...
-	  if (!(--(actual->ecount)))
-	    {
-	      // upgrade actual state...
-	      actual->state = nextState (tmp->level);
-	      // ...initialize actual state thresholds...
-	      actual->dcount = (actual->state)->low;
-	      actual->icount = (actual->state)->interval;
-	      actual->scount = (actual->state)->samples;
-	      actual->ecount = (actual->state)->events;
-	    }  
-	  // ...otherwise, if events counter doesn't fires (we still had an event!)...
-	  else
-	    {
-	      // ...reset interval counter (cause an event occurred)... 
-	      actual->icount = tmp->interval;
-	      // ...reset samples counter (cause an event occurred)...
-	      actual->scount = tmp->samples;
-	      // ...exit process state (cause an event occurred)...
-	      actual->processState = false;
-	    }
-	}
-      // ...otherwise we just had a upper sample!
-    }
-}
-
-inline void 
-downgradeState (actualStatePtr actual, stateDscPtr tmp)
-{
-  // if downgrade counter fires...
-  if (!(--(actual->dcount)))
-    {
-       // downgrade actual state...
-       actual->state = prevState (tmp->level);
-       // ...initialize actual state thresholds...
-       actual->dcount = (actual->state)->low;
-       actual->icount = (actual->state)->interval;
-       actual->scount = (actual->state)->samples;
-       actual->ecount = (actual->state)->events;
-       // ...enter (or stay in) process state
-       actual->processState = true;
-    }
-  else
-    {
-      if (actual->processState)
-	{
-	  // ...reset events counter (cause an event does not occurred)...
-	  actual->ecount = tmp->events;
-	  // ...reset samples counter (cause an event does not occurred)...
-	  actual->scount = tmp->samples;
-	}
-      else
-	if (!(--(actual->icount)))
-	  {
-	    actual->processState = true;
-            actual->icount = tmp->interval;
-	  }
-    }
-}
-#endif 
 actualStatePtr 
 initActualState (const stateLst state)
 {
@@ -221,12 +108,6 @@ initActualState (const stateLst state)
 	  asPtr->state = stateDscTbl[state];
 	  asPtr->ucount = (asPtr->state)->sup;
 	  asPtr->dcount = (asPtr->state)->low;
-#ifdef SAMPLING
-	  asPtr->ecount = (asPtr->state)->events;
-	  asPtr->icount = (asPtr->state)->interval;
-	  asPtr->scount = (asPtr->state)->samples;
-	  asPtr->processState = true;
-#endif
 	}
     }
   return asPtr;
@@ -239,7 +120,9 @@ void disposeActualState (actualStatePtr actual)
 }
 
 stateDscPtr
-add2StateDscTbl (const stateLst pos, const stateLst level, const int il, const int sup, const int low, 
+add2StateDscTbl (const stateLst level, 
+		 const int vp, const int vmax, const int vmin, const int iv, 
+		 const int sup, const int low, 
 		 const int evt, const int ntv, const int smp)
 {
   stateDscPtr dsPtr = NULL;
@@ -248,18 +131,16 @@ add2StateDscTbl (const stateLst pos, const stateLst level, const int il, const i
   if (dsPtr)
     {
       dsPtr->level = level;
-      dsPtr->il = il;
+      dsPtr->vp = vp;
+      dsPtr->vmax = vmax;
+      dsPtr->vmin = vmin;
+      dsPtr->iv = iv;
       dsPtr->sup = sup;
       dsPtr->low = low;
-#ifdef SAMPLING
-      dsPtr->events = evt;
-      dsPtr->interval = ntv;
-      dsPtr->samples = smp;
-#endif
       dsPtr->newState = runStateTbl[level];
-      if (stateDscTbl[pos] != NULL)
-	free (stateDscTbl[pos]);
-      stateDscTbl[pos] = dsPtr;
+      if (stateDscTbl[level] != NULL)
+	free (stateDscTbl[level]);
+      stateDscTbl[level] = dsPtr;
     }
   return dsPtr;
 }
@@ -278,33 +159,45 @@ resetStateDscTbl (void)
 }
 
 stateLst  
-runStateA (actualStatePtr actual, const int value)
+runStateA (actualStatePtr actual, const int vp, const int vmax, const int vmin, const int iv)
 {  
   stateDscPtr tmp = actual->state;
 
-  // value > istant threshold
-  if (value > tmp->il)
+  // at least one of the value > corresponding istant threshold --> instant state upgraded!
+  if ((vp > tmp->vp) ||
+      (vmax > tmp->vmax) ||
+      (vmin > tmp->vmin) ||
+      (iv > tmp->iv))
+    // let's see if we can upgrade activity state...
     upgradeState (actual, tmp);
-  // value <= instant threshold
+  // instant state has not changed!
   else 
     resetState (actual, tmp);
   return (actual->state)->level;
 }
 
 stateLst  
-runStateBCD (actualStatePtr actual, const int value)
+runStateBCD (actualStatePtr actual, const int vp, const int vmax, const int vmin, const int iv)
 {
   stateDscPtr tmp = actual->state;
 
-  // value > istant threshold
-  if (value > tmp->il)
+  // at leat on of the values > corresponding istant threshold --> instant state upgraded!
+  if ((vp > tmp->vp) ||
+      (vmax > tmp->vmax) ||
+      (vmin > tmp->vmin) ||
+      (iv > tmp->iv))
+    // let's see if we can upgrade activity state...
     upgradeState (actual, tmp);
   else 
     {
-      // value <= previuos instant threshold
-      if (value <= (prevState (tmp->level))->il)
+      // all values <= corresponding previuos instant threshold --> instant state downgraded!
+      if ((vp <= (prevState (tmp->level))->vp) &&
+	  (vmax <= (prevState (tmp->level))->vmax) &&
+	  (vmin <= (prevState (tmp->level))->vmin) &&
+	  (iv <= (prevState (tmp->level))->iv))
+        // let's see if we can downgrade activity state...
 	downgradeState (actual, tmp);
-      // previous instant threshold < value <= instant threshold
+      // instant state has not changed!
       else 
 	resetState (actual, tmp);
     }
@@ -312,20 +205,24 @@ runStateBCD (actualStatePtr actual, const int value)
 }
 
 stateLst  
-runStateDummy (actualStatePtr actual, const int value)
+runStateDummy (actualStatePtr actual, const int vp, const int vmax, const int vmin, const int iv)
 {
   return (actual->state)->level;
 }
 
 stateLst  
-runStateE (actualStatePtr actual, const int value)
+runStateE (actualStatePtr actual, const int vp, const int vmax, const int vmin, const int iv)
 {
   stateDscPtr tmp = actual->state;
 
-  // value < istant threshold
-  if (value < tmp->il)
+  // all values < istant threshold --> instant state downgraded!
+  if ((vp < tmp->vp) &&
+      (vmax < tmp->vmax) &&
+      (vmin < tmp->vmin) &&
+      (iv < tmp->iv))
+    // let's see if we can downgrade activity state...
     downgradeState (actual, tmp);
-  // reset downgrade counter to low threshold
+  // instant state has not changed!
   else 
     resetState (actual, tmp);
   return (actual->state)->level;

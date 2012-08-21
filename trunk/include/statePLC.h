@@ -26,24 +26,22 @@ typedef struct actualState * actualStatePtr;
 typedef struct stateDsc * stateDscPtr;
 
 // state function prototype
-typedef stateLst (*runState) (actualStatePtr, const int);
+typedef stateLst (*runState) (actualStatePtr, const int, const int, const int, const int);
 
 // PLC's state descriptor
 struct stateDsc
 {
   // state level
   stateLst level; 
-  // instant state level
-  int il;
+  // instant state levels
+  int vp;
+  int vmax;
+  int vmin;
+  int iv;
   // state's upgrade threshold
   int sup; 
   // state's downgrade threshold
   int low;
-#ifdef SAMPLING
-  int interval;
-  int events;
-  int samples;
-#endif
   // state transition function
   runState newState;  
 };
@@ -57,12 +55,6 @@ struct actualState
   int ucount;
   // actual state's downgrade level
   int dcount;
-#ifdef SAMPLING
-  int icount;
-  int ecount;
-  int scount;
-  int processState;
-#endif
 }; 
 
 // PLC's state functions table
@@ -73,26 +65,40 @@ extern stateDscPtr stateDscTbl[];
 
 // actual state function implementation
 extern stateLst runStateA (actualStatePtr plc, 
-			   const int data);
+			   const int vp,
+			   const int vmax,
+			   const int vmin,
+			   const int iv);
 extern stateLst runStateBCD (actualStatePtr plc, 
-			     const int data);
+			   const int vp,
+			   const int vmax,
+			   const int vmin,
+			   const int iv);
 extern stateLst runStateE (actualStatePtr plc, 
-			   const int data);
+			   const int vp,
+			   const int vmax,
+			   const int vmin,
+			   const int iv);
 extern stateLst runStateDummy (actualStatePtr plc, 
-			       const int data);
+			   const int vp,
+			   const int vmax,
+			   const int vmin,
+			   const int iv);
 
 // PLC's actual state initialization and finalization functions
 extern actualStatePtr initActualState (const stateLst state);
 extern void disposeActualState (actualStatePtr actual);
 
 // PLC's state descriptor table initialization and finalization functions
-extern stateDscPtr add2StateDscTbl (const stateLst pos, 
-				       const stateLst level, 
-				       const int il, 
+extern stateDscPtr add2StateDscTbl  (const stateLst level, 
+				       const int vp,
+				       const int vmax,
+				       const int vmin,
+				       const int iv,
 				       const int sup, 
 				       const int low, 
-				       const int evt, 
-				       const int ntv, 
-				       const int smp);
+				       const int evt,	// unused - sampling logic for activity state changes 
+				       const int ntv, 	// unused - sampling logic for activity state changes
+				       const int smp);	// unused - sampling logic for activity state changes
 extern void resetStateDscTbl (void);
 #endif
