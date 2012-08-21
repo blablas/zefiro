@@ -41,17 +41,24 @@
 #define EXIT_FAILURE 	1
 #define MAXWIND 	170
 
-typedef struct pData * pDataPtr;
 // plc's status
 typedef enum {UNK, RUN, STP, ERR} pStatus; 
+typedef struct pData * pDataPtr;
+
 // plc's data structure
 struct pData {
     // mobile average data windows
     int *vList;
     // plc's ip address
     char ip[15];
-    // plc's id
-    int id,
+    // plc's MPI address
+    int mpi,
+    	// plc's RACK
+    	rack,
+    	// plc's SLOT
+    	slot,
+    	// plc's id
+    	id,
 	// signal waited for next activation
 	sig,
 	// first element in data windows
@@ -95,8 +102,8 @@ extern void* doWork (void *argv);
 
 extern int lfp;
 extern char *pidfile;
-extern unsigned int LPARAM, 
-       MIN, 
+//extern unsigned int LPARAM, 
+extern unsigned int MIN, 
        MAX, 
        NRETRY;
 #endif

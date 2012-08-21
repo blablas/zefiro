@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR(config)
 
 AC_DEFINE([MPI_ADDR], [2], [MPI's address])
 AC_DEFINE([RACK], [0], [Rack number])
-AC_DEFINE([SLOT], [2], [CPU's slot])
+AC_DEFINE([SLOT], [3], [CPU's slot])
 AC_DEFINE([DAREA], [105], [PLC's data area])
 AC_DEFINE([DLEN], [16], [PLC's data area length])
 AC_DEFINE([AAREA], [123], [PLC's alarm area])

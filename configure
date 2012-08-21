@@ -1315,7 +1315,7 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-#define SLOT 2
+#define SLOT 3
 _ACEOF
 
 

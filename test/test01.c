@@ -60,9 +60,9 @@ main (void)
   int i, j, vp, res;
   unsigned char nfo[2];
   unsigned char alm[19];
-  char *plc = "10.50.3.96";
+  char *plc = "10.50.3.92";
 
-  daveSetDebug(daveDebugAll);
+  daveSetDebug(daveDebugExchange);
   daveConnection *dc; 
   //daveInterface *di;
   plcData wlist;
@@ -71,19 +71,19 @@ main (void)
  
   //if (!plcConnect (dc))
     //{
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 100; i++) {
     //printf ("\t\tplcInitConnect\n");
     //res = plcInitConnect (plc, &dc);
-    printf ("\t\tplcConnect\n");
+    printf ("\nwaiting to connect...\n");
     if (!plcConnect (plc, &dc)) {
-      usleep (1000000);
-      printf ("\t\tdaveReadBytes\n");
+      //printf ("\ndaveReadBytes: press any key\n");
+      //getchar ();
       if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
 	{
-	  printf ("daveReadBytes: %s\n", daveStrerror(res));
+	  printf ("\nerror in daveReadBytes: %s\n", daveStrerror(res));
 	}
       else {
-	vp = daveGetU16At (dc, 0);
+	vp = daveGetU16At (dc, 2);
 	/*for (j = 0; j < sizeof (nfo); j++)
 	  {
 	    nfo[j] = daveGetU8At (dc, 14 + (j * sizeof (unsigned char)));
@@ -100,6 +100,7 @@ main (void)
       }
       plcDisconnect (dc);
     }
+    usleep (1000000);
   }
   printf ("Press any key to disconnect");
   getchar ();

@@ -25,23 +25,29 @@
 
 int 
 plcConnect (const char *ip, daveConnection **dc)
+//plcConnect (pDataPtr dta, daveConnection **dc)
 {
   _daveOSserialType fds;
-  int j, optval, res;
+  int j, 
+      optval, 
+      res = daveConnectionError;
   daveInterface *di;
 
   // open a TCP on ISO connection with PLC (timeout in seconds)
   fds.rfd = openSocket (102, ip, TIMEOUT);
+  //fds.rfd = openSocket (102, dta->ip, TIMEOUT);
   fds.wfd = fds.rfd;
 
   // connect to the PLC
   if (fds.rfd)
     {
       di = daveNewInterface (fds, "IF1", 1, daveProtoISOTCP, daveSpeed187k);
-      *dc = daveNewConnection (di, MPI_ADDR, RACK, SLOT);
       daveSetTimeout (di, TIMEOUT * 1000000);
+      *dc = daveNewConnection (di, MPI_ADDR, RACK, SLOT);
+      //*dc = daveNewConnection (di, dta->mpi, dta->rack, dta->slot);
       if (res = daveConnectPLC (*dc)) 
-	closeSocket (fds.rfd);
+	//closeSocket (fds.rfd);
+	plcDisconnect (*dc);
     }
   return res;
 }

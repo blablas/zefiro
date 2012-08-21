@@ -18,12 +18,13 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+//#include "connectPLC.h"
 #include "zefiro.h"
 
 int lfp = -1;
 char *pidfile = NULL;
-unsigned int LPARAM, 
-	     MIN, 
+//unsigned int LPARAM, 
+unsigned int MIN, 
 	     MAX, 
 	     NRETRY;
 
@@ -172,13 +173,16 @@ initPlcsData (MYSQL *conn, int *len)
   MYSQL_BIND resultSet[2];
   // SELECT_PLC_DTA output buffers
   char ip[15];
-  int id, 
+  int id,
+      mpi,
+      rack,
+      slot, 
       i,
       res = 0,
       pos = 0;
 
   if (res = sqlPrepareStmt (conn, &stmt, SELECT_PLC_DTA))
-    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else
     {
       // Set output buffers for registry resultset
@@ -193,12 +197,27 @@ initPlcsData (MYSQL *conn, int *len)
       resultSet[1].buffer = (void *)ip;
       resultSet[1].buffer_length = sizeof (ip);
       resultSet[1].is_null = 0;
+//      // 'MPI' 
+//      resultSet[2].buffer_type = MYSQL_TYPE_LONG;
+//      resultSet[2].buffer = (void *)&mpi;
+//      resultSet[2].is_null = 0;
+//      resultSet[2].is_unsigned = 0;
+//      // 'RACK' 
+//      resultSet[3].buffer_type = MYSQL_TYPE_LONG;
+//      resultSet[3].buffer = (void *)&rack;
+//      resultSet[3].is_null = 0;
+//      resultSet[3].is_unsigned = 0;
+//      // 'SLOT' 
+//      resultSet[4].buffer_type = MYSQL_TYPE_LONG;
+//      resultSet[4].buffer = (void *)&slot;
+//      resultSet[4].is_null = 0;
+//      resultSet[4].is_unsigned = 0;
       if (res = sqlBindResult (stmt, resultSet))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else
 	{	
 	  if (res = sqlExecStmt (stmt))
-	    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
 	  else 
 	    {
 	      // initialize PLCs' data (id, ip)
@@ -223,6 +242,9 @@ initPlcsData (MYSQL *conn, int *len)
 			dta[pos]->alm[i] = (unsigned char) 0;
 		      for (i = 0; i < sizeof (dta[pos]->nfo); i++)
 			dta[pos]->nfo[i] = (unsigned char) 0;
+		      dta[pos]->mpi = mpi;
+		      dta[pos]->rack = rack;
+		      dta[pos]->slot = slot;
 		      dta[pos]->first = 0;
 		      dta[pos]->last = MAX - 1; 
 		      dta[pos]->vp1 = 0;
@@ -231,7 +253,7 @@ initPlcsData (MYSQL *conn, int *len)
 		      dta[pos]->hgt = 0;
 		      dta[pos]->min = INT_MAX;
 		      dta[pos]->max = INT_MIN;
-		      dta[pos]->avg = 0.0;
+		      dta[pos]->avg = 0;
 		      // initialize activity state to level A
 		      dta[pos]->act = initActualState (A);  
 		    }
@@ -242,7 +264,7 @@ initPlcsData (MYSQL *conn, int *len)
 	    }
 	}
       if (sqlCloseStmt (&stmt))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
     }
   return dta;
 }
@@ -269,7 +291,7 @@ initConfParams (MYSQL *conn)
   int res = 0;
 
   if (res = sqlPrepareStmt (conn, &stmt, GET_CONF_PARAMS))
-    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else
     {
       // Set output buffers for configParams resultset
@@ -284,25 +306,25 @@ initConfParams (MYSQL *conn)
       resultSet[1].buffer = (void *)&MAX;
       resultSet[1].is_null = 0;
       resultSet[1].is_unsigned = 1;
-      // 'LPARAM' 
-      resultSet[2].buffer_type = MYSQL_TYPE_LONG;
-      resultSet[2].buffer = (void *)&LPARAM;
-      resultSet[2].is_null = 0;
-      resultSet[2].is_unsigned = 1;
+//     // 'LPARAM' 
+//      resultSet[2].buffer_type = MYSQL_TYPE_LONG;
+//      resultSet[2].buffer = (void *)&LPARAM;
+//      resultSet[2].is_null = 0;
+//      resultSet[2].is_unsigned = 1;
       // 'NRETRY' 
       resultSet[3].buffer_type = MYSQL_TYPE_LONG;
       resultSet[3].buffer = (void *)&NRETRY;
       resultSet[3].is_null = 0;
       resultSet[3].is_unsigned = 1;
       if (res = sqlBindResult (stmt, resultSet))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else
 	if (res = sqlExecStmt (stmt))
-	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
 	else 
 	  mysql_stmt_fetch (stmt);
       if (sqlCloseStmt (&stmt))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
     }
   return res;
 }
@@ -328,7 +350,7 @@ initWindLevels (MYSQL *conn)
   stateLst rows;
 
   if (res = sqlPrepareStmt (conn, &stmt, SELECT_ENABLE_LEVELS))
-    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else
     {
       // Set output buffers for windLevels resultset
@@ -389,23 +411,23 @@ initWindLevels (MYSQL *conn)
       resultSet[10].is_null = 0;
       resultSet[10].is_unsigned = 0; 
       if (res = sqlBindResult (stmt, resultSet))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else
 	{	
 	  if (res = sqlExecStmt (stmt))
-	    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
 	  else 
 	    {
 	      // initialize state descriptors table
 	      rows = mysql_stmt_num_rows (stmt);
 	      while (!mysql_stmt_fetch (stmt))
-		if (!add2StateDscTbl (id, id, vp, sup/DPERIOD, low/DPERIOD, evt, ntv, smp))
+		if (!add2StateDscTbl (id, vp, vmax, vmin, iv, sup/DPERIOD, low/DPERIOD, evt, ntv, smp))
 		  syslog (LOG_ERR, "error in %s (file %s at line %d): cannot add state descriptor at position %d", 
 			  __func__, __FILE__, __LINE__, id); 
 	    }
 	}
       if (sqlCloseStmt (&stmt))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
     }
   return res;
 }
@@ -418,7 +440,7 @@ setPlcState (MYSQL *conn, const int unsigned id, const unsigned int status)
   MYSQL_BIND paramU[2];
 
   if (res = sqlPrepareStmt (conn, &stmt, SET_PLC_SATUS))
-    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else 
     {
       memset (paramU, 0, sizeof (paramU));
@@ -433,12 +455,12 @@ setPlcState (MYSQL *conn, const int unsigned id, const unsigned int status)
       paramU[1].is_null = 0;
       paramU[1].is_unsigned = 0;
       if (res = sqlBindParam (stmt, paramU))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else 
 	if (res = sqlExecStmt (stmt))
-	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       if (sqlCloseStmt (&stmt))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
     }
   return res;
 }
@@ -461,7 +483,7 @@ setLiveDta (MYSQL *conn, const int unsigned id, const bool enable)
       break;
     }
   if (res = sqlPrepareStmt (conn, &stmt, live))
-    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else 
     {
       // 'id'
@@ -471,12 +493,12 @@ setLiveDta (MYSQL *conn, const int unsigned id, const bool enable)
       paramI[0].is_null = 0;
       paramI[0].is_unsigned = 0;
       if (res = sqlBindParam (stmt, paramI))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else 
 	if (res = sqlExecStmt (stmt))
-	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
       if (sqlCloseStmt (&stmt))
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
     }
   return res;
 }
@@ -509,7 +531,7 @@ doWork (void *argv)
   MYSQL_STMT *stmt;
   MYSQL_BIND paramU[6];
   bool exit = false;
-  int *value;
+//  int *value;
   int i,
       res,
       vp,
@@ -517,34 +539,35 @@ doWork (void *argv)
       disconnect = 1,
       // signal received in sigwait (SIGRTMIN based or SIGTERM)
       rsig,
-      aperiod = APERIOD,
-      plcErr = 0,
-      sqlErr = 0;
+      plcErr = 0;
   periodDscPtr pd;
   daveConnection *dc;
   //daveInterface *di;
   pDataPtr dta;
 
+#ifdef DEBUG
+  daveSetDebug(daveDebugByte);
+#endif
   dta = (pDataPtr) argv;
   // get wind level parameters
-  switch (LPARAM)
-    {
-    case 1:
-      value = &vp;
-      break;
-    case 2:
-      value = &(dta->max);
-      break;
-    case 3:
-      value = &(dta->min);
-      break;
-    case 4:
-      value = &(dta->avg);
-      break;
-    default:
-      value = &vp;
-      break;
-    }
+//  switch (LPARAM)
+//    {
+//    case 1:
+//      value = &vp;
+//      break;
+//    case 2:
+//      value = &(dta->max);
+//      break;
+//    case 3:
+//      value = &(dta->min);
+//      break;
+//    case 4:
+//      value = &(dta->avg);
+//      break;
+//    default:
+//      value = &vp;
+//      break;
+//    }
   // connect to mysql data store
   if (res = sqlConnect (&conn, 1))
     {
@@ -552,7 +575,7 @@ doWork (void *argv)
       pthread_exit (NULL);
     }
   if (res = sqlPrepareStmt (conn, &stmt, UPDATE_LIVE_DTA))
-    syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", __func__, dta->id,  dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
+    syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", __func__, dta->id,  dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
   else
     {
       // Set output buffers for windLiveLevels
@@ -588,7 +611,7 @@ doWork (void *argv)
       paramU[5].is_null = 0;
       paramU[5].is_unsigned = 0;
       if (res = sqlBindParam (stmt, paramU))
-	syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else
 	{
 	  // make thread periodic
@@ -603,6 +626,7 @@ doWork (void *argv)
 		      syslog (LOG_INFO, "connecting to plc %d: %s...", dta->id, dta->ip);
 #endif
 	              disconnect = plcConnect (dta->ip, &dc);
+	              //disconnect = plcConnect (dta, &dc);
 		    }
 		  // if disconnected from plc...
 		  if (disconnect)
@@ -656,11 +680,12 @@ doWork (void *argv)
 #endif
 			    }
 
-//			  vp = 1 + (int) (40.0 * (rand() / (RAND_MAX + 1.0)));
+			  //vp = 1 + (int) (40.0 * (rand() / (RAND_MAX + 1.0)));
 
-			  // get wind data from anemometer 1 if not faulty...
-			  // ...otherwise, get data from anemometr 2 if not faulty...
-			  vp = (dta->vp1 < MAXWIND) ? dta->vp1 : ((dta->vp2 < MAXWIND) ? dta->vp2 : -1);
+			  // get wind data from anemometer 2 if not faulty...
+			  // ...otherwise, get data from anemometr 1 if not faulty... 
+			  // (Richiesta SABATINI 16/07/2012)
+			  vp = (dta->vp2 < MAXWIND) ? dta->vp2 : ((dta->vp1 < MAXWIND) ? dta->vp1 : -1);
 			  // ...otherwise exit! 
 			  if (vp < 0)
 			    {
@@ -671,11 +696,11 @@ doWork (void *argv)
 			  // ...calculate min, max and avg (moving average)...
 			  processData (dta, vp);
 			  // ...get anemometer new state based on value...
-			  level = dta->act->state->newState (dta->act, *value);
+			  level = dta->act->state->newState (dta->act, vp, dta->max, dta->min, dta->avg);
 #ifdef DEBUG
+			  syslog (LOG_INFO, "plc %s: vp main %d", dta->ip, dta->vp1);
+			  syslog (LOG_INFO, "plc %s: vp secondary %d", dta->ip, dta->vp2);
 			  syslog (LOG_INFO, "plc %s: vp  %d", dta->ip, vp);
-			  syslog (LOG_INFO, "plc %s: vp1 %d", dta->ip, dta->vp1);
-			  syslog (LOG_INFO, "plc %s: vp2 %d", dta->ip, dta->vp2);
 			  syslog (LOG_INFO, "plc %s: wgt %d", dta->ip, dta->wgt);
 			  syslog (LOG_INFO, "plc %s: hgt %d", dta->ip, dta->hgt);
 			  syslog (LOG_INFO, "plc %s: pos %d", dta->ip, dta->pos);
@@ -689,7 +714,7 @@ doWork (void *argv)
 			    // ...error updating...
 			    {
 			      syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", 
-				      __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
+				      __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
 			      // ...if connection error to mysql, exit!
 			      if (res == CR_SERVER_GONE_ERROR || res == CR_SERVER_LOST || CR_SERVER_LOST_EXTENDED)
 				exit = true;
@@ -711,7 +736,7 @@ doWork (void *argv)
 		    if (rsig == SIGTERM)
 		      exit = true;
 		    }
-		  // if wait_period fails logg it
+		  // if wait_period fails, log it
 		  else 
 		    syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): error waiting for next period", 
 			    __func__, dta->id, dta->ip, __FILE__, __LINE__);
@@ -722,7 +747,7 @@ doWork (void *argv)
 	      // delete periodic timer
 	      if (res = timer_delete (pd->timerId))
 		syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s",
-			__func__, dta->id, dta->ip, __FILE__, __LINE__, strerror(res));
+			__func__, dta->id, dta->ip, __FILE__, __LINE__, strerror (res));
 	      // free periodic descriptor
 	      free (pd);
 	    }
@@ -731,7 +756,7 @@ doWork (void *argv)
   if (sqlCloseStmt (&stmt))
     {
       syslog (LOG_CRIT, "error in %s of plc %d: %s (file %s at line %d): %s", 
-	      __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error(stmt));
+	      __func__, dta->id, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
       pthread_exit (NULL);
     }
   // disconnect from mysql data store
@@ -850,57 +875,40 @@ main (int argc, char *argv[])
 	    free (pd);
 	    pd = NULL;
 	  }
-	else
 	// SIGUSR1 received (timer expiration) check for dead threads
-	  {
-	    for (i = 0; i < NTHS; i++)
-	      // if thread could not be found, log it & count it
-	      if (pthread_kill (plc[i], 0) == ESRCH)
-		{
-		  syslog (LOG_ERR, "error in %s (file %s at line %d): thread %s, %s", __func__, __FILE__, __LINE__, plcsDta[i]->ip, strerror (ESRCH));
-		  died ++;
-		  // check if connection to mysql data store is still up
-		  if (!mysql_ping (conn))
-		    // set thread status to 'ERR'
-		    res = setPlcState (conn, plcsDta[i]->id, ERR);
-		  else
-		    syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error (conn));
-		}
-	    // all threads died, exits
-	    if (died == NTHS)
+	else
+	  // ping mysql data store to keep connection open...
+	  mysql_ping (conn);
+	  for (i = 0; i < NTHS; i++)
+	    // if thread could not be found, log it & count it
+	    if (plc[i] && (pthread_kill (plc[i], 0) == ESRCH))
 	      {
-		free (pd);
-		pd = NULL;
+		syslog (LOG_ERR, "error in %s (file %s at line %d): thread %s, %s", 
+			__func__, __FILE__, __LINE__, plcsDta[i]->ip, strerror (ESRCH));
+		died ++;
+		// delete thread id from list
+		plc[i] = 0;
+		// set thread status to 'ERR'
+		res = setPlcState (conn, plcsDta[i]->id, ERR);
 	      }
-	  }
+	  // all threads died, exits
+	  if (died == NTHS)
+	    {
+	      free (pd);
+	      pd = NULL;
+	    }
       }
-  // if there're threads still alive...
+  // we exited...if there're threads still alive...
   if (died < NTHS) 
     {
       // cancel and join all PLC's threads still living
       for (i = 0; i < NTHS; i++)
-	if (!pthread_kill (plc[i], SIGTERM))
+	if (plc[i] && (!pthread_kill (plc[i], SIGTERM)))
 	  if (!pthread_join (plc[i], NULL))
-	    // check if connection to mysql data store is still up
-	    if (!mysql_ping (conn))
-	      // set thread status to 'STP'
-	      res = setPlcState (conn, plcsDta[i]->id, STP);
-	    else
-	      syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error (conn));
-      // check if connection to mysql data store is still up
-      if (!mysql_ping (conn))
-	{
-	  // disable backlog of windLiveValues
-	  if (res = setBackLog (conn, false))
-	    {
-	      syslog (LOG_EMERG, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
-	      sqlDisconnect (&conn);
-	      mysql_library_end ();
-	      exit (EXIT_FAILURE);
-	    }
-	}
-      else
-	syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error (conn));
+	    // set thread status to 'STP'
+	    setPlcState (conn, plcsDta[i]->id, STP);
+      // disable backlog of windLiveValues
+      res = setBackLog (conn, false);
     }
   // ...else log that we exited due to critical error
   else

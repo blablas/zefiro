@@ -20,6 +20,7 @@
 #include <mysql.h>
 #include <errmsg.h>
 
+//#define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip), mpi, rack, slot FROM registry where en = 1"
 #define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip) FROM registry where en = 1"
 #define SET_PLC_SATUS		"UPDATE registry set sts = ? WHERE id = ?"
 #define SELECT_ENABLE_LEVELS 	"SELECT id, vp, vmax, vmin, iv, up, do, hys, evt, ntv, smp FROM windLevels where en = 1"

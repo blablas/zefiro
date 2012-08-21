@@ -4,8 +4,52 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "statePLC.h"
 #include "sqlPLC.h"
+
+typedef struct data * dataPtr;
+struct data {
+    int min,
+	max,
+	avg,
+	first,
+	last;
+    int vList[10];
+};
+
+void
+processData (dataPtr plc, const int value)
+{
+  int i;
+
+  plc->min = 1000;
+  plc->max = -1000;
+  plc->avg = 0;
+  // new value for last index
+  plc->last = (plc->last + 1) % 10; 
+  if (plc->vList[plc->first] >= 0)
+    // MAX element queue 
+    if (plc->last == plc->first) 
+      // new value form first index
+      plc->first = (plc->first + 1) % 10;
+  // insert value
+  plc->vList[plc->last] = value;
+  if (plc->vList[(plc->last + 1) % 10] >= 0)
+    {
+      // Calculate min, max, avg
+      for (i = 0; i < 10; i++)
+	{
+	  printf ("%d) %d\n", (plc->first + i) % 10 , plc->vList[(plc->first + i) % 10]);
+	  if (plc->vList[i] < plc->min)
+	    plc->min = plc->vList[i];
+	  if (plc->vList[i] > plc->max)
+	    plc->max = plc->vList[i];
+	  plc->avg += plc->vList[i];
+	}
+      plc->avg /= 10;
+    }
+}
 
 int 
 main (void)
@@ -26,6 +70,7 @@ main (void)
       hys,
       lvl,
       ret;
+  dataPtr dta;
   stateLst pos = A, rows;
   MYSQL *conn;
   MYSQL_STMT *stmt;
@@ -114,10 +159,9 @@ main (void)
   printf ("effected rows: %d\n", rows);
   while (!mysql_stmt_fetch (stmt))
     {
-      //if (pos == (rows - 1))
-	//pos = E;
-      add2StateDscTbl (id, id, vp, sup, low, evt, ntv, smp);	// state level: could be one among vp, vmax, vmin, iv
-      printf ("level: id(%d), vp(%d), up(%d), do(%d), hys(%d), evt(%d), ntv(%d), smp(%d), fun(%d)\n", id, vp, sup, low, hys, evt, ntv, smp, id); 
+      add2StateDscTbl (id, vp, vmax, vmin, iv, sup, low, evt, ntv, smp);
+      printf ("level: id(%d), vp(%d), vmax(%d), vmin(%d), iv(%d), up(%d), do(%d), hys(%d), evt(%d), ntv(%d), smp(%d), fun(%d)\n", 
+	      id, vp, vmax, vmin, iv, sup, low, hys, evt, ntv, smp, id); 
       pos++;
     }
   if (res = sqlCloseStmt (&stmt))
@@ -129,6 +173,8 @@ main (void)
   // initialize state machine in state A
   actualStatePtr actual;
   actual = initActualState (A);
+  id = 1;
+  dta = (dataPtr) malloc (sizeof (struct data));
 
   // update liveValue in PLC DB for Test PLC (id = 1)
   if (res = sqlPrepareStmt (conn, &stmt, UPDATE_LIVE_DTA))
@@ -145,17 +191,17 @@ main (void)
   paramU[0].is_unsigned = 0;
   // 'vmax'
   paramU[1].buffer_type = MYSQL_TYPE_TINY;
-  paramU[1].buffer = (void *)&vmax;
+  paramU[1].buffer = (void *)&(dta->max);
   paramU[1].is_null = 0;
   paramU[1].is_unsigned = 0;
   // 'vmin'
   paramU[2].buffer_type = MYSQL_TYPE_TINY;
-  paramU[2].buffer = (void *)&vmin;
+  paramU[2].buffer = (void *)&(dta->min);
   paramU[2].is_null = 0;
   paramU[2].is_unsigned = 0;
   // 'iv'
   paramU[3].buffer_type = MYSQL_TYPE_TINY;
-  paramU[3].buffer = (void *)&iv;
+  paramU[3].buffer = (void *)&(dta->avg);
   paramU[3].is_null = 0;
   paramU[3].is_unsigned = 0;
   // 'lvl'
@@ -174,28 +220,25 @@ main (void)
       return res;
     }
 
-  // LIVEQ input parameters
-  vmax = 0,	// SHOULD BE CALCULATED
-  vmin = 0,	// SHOULD BE CALCULATED
-  iv = 0;	// SHOULD BE CALCULATED 
-  id = 1;	// PLC's index
-  printf ("value ('q' to quit): ");
-  while (scanf ("%d", &value))
+  dta->first = 0;
+  dta->last = 9;
+  printf ("('q' to quit): ");
+//  while (scanf ("%d", &value))
+  while (getchar () != 'q')
     {
-      lvl = actual->state->newState (actual, value);
+//      value = 1 + (int) (100.0 * (rand() / (RAND_MAX + 1.0)));
+      value = ((double) rand() / (RAND_MAX + 1.0)) * (80 - 10 + 1) + 10;
+      processData(dta, value);
+      printf ("processed data: vp(%d), vmax(%d), vmin(%d), iv(%d)\n", value, dta->max, dta->min, dta->avg);
+      lvl = actual->state->newState (actual, value, dta->max, dta->min, dta->avg);
       if (sqlExecStmt (stmt))
 	{
 	  printf ("sqlExecStmt (U): %d\n", res);
 	  return res;
 	}
-      printf ("effected rows: %d\n", mysql_stmt_affected_rows (stmt));
-#ifdef SAMPLING
-      printf ("new state: level(%d), up counter(%d), down counter(%d), events count(%d), interval count(%d), in interval(%d), samples count(%d)\n", 
-	      lvl, actual->ucount, actual->dcount, actual->ecount, actual->icount, actual->processState, actual->scount); 
-#else 
+//      printf ("effected rows: %d\n", mysql_stmt_affected_rows (stmt));
       printf ("new state: level(%d), up counter(%d), down counter(%d)\n", lvl, actual->ucount, actual->dcount); 
-#endif
-      printf ("value ('q' to quit): ");
+      printf ("('q' to quit): ");
     }
 
   if (res = sqlCloseStmt (&stmt))
@@ -205,6 +248,7 @@ main (void)
     }
   sqlDisconnect (&conn);
 
+  free (dta);
   disposeActualState (actual);
   resetStateDscTbl ();
 
