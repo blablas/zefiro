@@ -57,54 +57,48 @@ initList (plcData *buffer)
 int 
 main (void)
 {
-  int i, j, vp, res;
+  int mpi = 2, rack = 0, slot = 3, i, j, vp, res;
   unsigned char nfo[2];
   unsigned char alm[19];
-  char *plc = "10.50.3.92";
+  char *plc = "10.50.3.93";
 
-  daveSetDebug(daveDebugExchange);
+  //daveSetDebug(daveDebugAll);
   daveConnection *dc; 
-  //daveInterface *di;
   plcData wlist;
 
   initList (&wlist);
  
-  //if (!plcConnect (dc))
-    //{
-  for (i = 0; i < 100; i++) {
-    //printf ("\t\tplcInitConnect\n");
-    //res = plcInitConnect (plc, &dc);
-    printf ("\nwaiting to connect...\n");
-    if (!plcConnect (plc, &dc)) {
-      //printf ("\ndaveReadBytes: press any key\n");
-      //getchar ();
-      if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
+  for (i = 0; i < 1000; i++) 
+    {
+      printf ("\nwaiting to connect...\n");
+      if (!plcConnect (plc, mpi, rack, slot, &dc)) 
 	{
-	  printf ("\nerror in daveReadBytes: %s\n", daveStrerror(res));
+	  //printf ("\ndaveReadBytes: press any key\n");
+	  //getchar ();
+	  if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN + ALEN, NULL)) 
+	    printf ("\nerror in daveReadBytes: %s\n", daveStrerror(res));
+	  else 
+	    {
+	      vp = daveGetU16At (dc, 2);
+	      for (j = 0; j < sizeof (nfo); j++)
+		{
+		  nfo[j] = daveGetU8At (dc, 14 + (j * sizeof (unsigned char)));
+		  printf ("Nfo[%d]: %u(%d)\n", j, nfo[j], sizeof (nfo));
+		}
+	      for (j = 0; j < sizeof (alm); j++)
+		{
+		  alm[j] = daveGetU8At (dc, 18 + (j * sizeof (unsigned char)));
+		  printf ("Alm[%d]: %u(%d)\n", j, alm[j], sizeof (alm));
+		}
+	      printf ("\t\tVp: %d\n", vp);
+	      insList (&wlist, vp);
+	      printList (&wlist);
+	    }
+	  plcDisconnect (dc);
 	}
-      else {
-	vp = daveGetU16At (dc, 2);
-	/*for (j = 0; j < sizeof (nfo); j++)
-	  {
-	    nfo[j] = daveGetU8At (dc, 14 + (j * sizeof (unsigned char)));
-	    printf ("Nfo[%d]: %u(%d)\n", j, nfo[j], sizeof (nfo));
-	  }
-	for (j = 0; j < sizeof (alm); j++)
-	  {
-	    alm[j] = daveGetU8At (dc, 18 + (j * sizeof (unsigned char)));
-	    printf ("Alm[%d]: %u(%d)\n", j, alm[j], sizeof (alm));
-	  }*/
-	printf ("\t\tVp: %d\n", vp);
-	insList (&wlist, vp);
-	//printList (&wlist);
-      }
-      plcDisconnect (dc);
+      usleep (1000000);
     }
-    usleep (1000000);
-  }
   printf ("Press any key to disconnect");
   getchar ();
-  //if (res = plcDisconnect (dc))
-    //printf ("plcDisconnect (final): %s\n", daveStrerror(res));
   return vp;
 }

@@ -34,7 +34,6 @@ start() {
         echo
         [ $RETVAL = 0 ] && touch ${lockfile} && logger -i -p local5.info $"zefirod daemon started"
         RETVAL=$?
-	chown mysql:mysql ${pidfile} && chown mysql:mysql ${lockfile}
         return $RETVAL
 }
 

@@ -149,7 +149,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 EXTRA_DIST = reconf configure include lib scripts
-SUBDIRS = src scripts
+SUBDIRS = src test scripts
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

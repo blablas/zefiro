@@ -36,6 +36,9 @@
 /* Define to 1 if you have the `nodave' library (-lnodave). */
 #undef HAVE_LIBNODAVE
 
+/* MPI's address */
+#undef MPI_ADDR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -54,11 +57,17 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Rack number */
+#undef RACK
+
 /* Daemon's user */
 #undef RUN_AS_USER
 
 /* "Sampling enabled" */
 #undef SAMPLING
+
+/* CPU's slot */
+#undef SLOT
 
 /* PLC's connection timeout (in seconds) */
 #undef TIMEOUT

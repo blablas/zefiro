@@ -82,9 +82,9 @@ struct pData {
 	// position (driver's cab)
         pos;
     // plc's info
-    unsigned char nfo[2],
+    unsigned char nfo[2];
 		  // plc's alarms
-		  alm[19];
+//		  alm[19];
     // anemometer actual state
     actualStatePtr act;
 };
@@ -102,7 +102,6 @@ extern void* doWork (void *argv);
 
 extern int lfp;
 extern char *pidfile;
-//extern unsigned int LPARAM, 
 extern unsigned int MIN, 
        MAX, 
        NRETRY;

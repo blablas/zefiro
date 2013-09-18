@@ -20,8 +20,7 @@
 #include <mysql.h>
 #include <errmsg.h>
 
-//#define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip), mpi, rack, slot FROM registry where en = 1"
-#define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip) FROM registry where en = 1"
+#define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip), mpi, rack, slot FROM registry where en = 1"
 #define SET_PLC_SATUS		"UPDATE registry set sts = ? WHERE id = ?"
 #define SELECT_ENABLE_LEVELS 	"SELECT id, vp, vmax, vmin, iv, up, do, hys, evt, ntv, smp FROM windLevels where en = 1"
 #define UPDATE_LIVE_DTA		"UPDATE windLiveValues SET vp = ?, vmax = ?, vmin = ?, iv = ?, ts = now(), lvl = ? WHERE id = ?"
@@ -29,7 +28,7 @@
 #define UPDATE_ALARM		"UPDATE infoAlarms SET alm1 = ?, alm2 = ?, alm3 = ?, alm4 = ?, alm5 = ?, alm6 = ?, alm7 = ?, alm8 = ?, alm9 = ?, alm10 = ?, alm11 = ?, alm12 = ?, alm13 = ?, alm14 = ?, alm15 = ?, alm16 = ?, alm17 = ?, alm18 = ?, alm19 = ?, ts = now() WHERE id = ?"
 #define INIT_LIVE_DTA		"INSERT INTO windLiveValues (id, lvl) VALUES (?, 0)"
 #define CLEAR_LIVE_DTA		"DELETE FROM windLiveValues WHERE id = ?"
-#define GET_CONF_PARAMS		"SELECT min, max, CAST(lvl AS UNSIGNED), nretry FROM configParams"
+#define GET_CONF_PARAMS		"SELECT min, max, nretry FROM configParams"
 #define ENABLE_LOG		"ALTER EVENT logWindLiveValues ENABLE"
 #define DISABLE_LOG		"ALTER EVENT logWindLiveValues DISABLE"
 #define ENABLE_ALOG		"ALTER EVENT logInfoAlarms ENABLE"

@@ -19,9 +19,7 @@
 #define CONNECTPLC_H
 #include <nodave.h>
 #include <openSocket.h>
-//#include "zefiro.h"
 
-extern int plcConnect (const char *ip, daveConnection **dc);
-//extern int plcConnect (pDataPtr plc, daveConnection **dc);
+extern int plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc);
 extern int plcDisconnect (daveConnection *dc);
 #endif

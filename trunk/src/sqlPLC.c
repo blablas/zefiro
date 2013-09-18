@@ -29,7 +29,6 @@ sqlConnect (MYSQL **conn, my_bool autoCommit)
 
   if (*conn = mysql_init (NULL))
     {
-      //mysql_options(*conn, MYSQL_OPT_RECONNECT, &reconnect);
       if (!(mysql_real_connect (*conn,
 			      DBHOST,		 
 			      DBUSER,		 
