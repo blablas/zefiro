@@ -25,7 +25,6 @@ periodDscPtr
 make_periodic (const int unsigned period, const int unsigned sig)
 {
   periodDscPtr pDsc = NULL;
-  //timer_t timerId;
   struct sigevent sigev;
   struct itimerspec itval;
 
