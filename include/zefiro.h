@@ -83,8 +83,8 @@ struct pData {
         pos;
     // plc's info
     unsigned char nfo[2];
-		  // plc's alarms
-//		  alm[19];
+    // plc's alarms
+    // alm[19];
     // anemometer actual state
     actualStatePtr act;
 };

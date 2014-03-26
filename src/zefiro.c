@@ -858,23 +858,28 @@ main (int argc, char *argv[])
 	    free (pd);
 	    pd = NULL;
 	  }
-/*
+
 	// SIGUSR1 received (timer expiration) check for dead threads
 	else
 	  {
-	    // ping mysql data store to keep connection open...
-	    mysql_ping (conn);
 	    for (i = 0; i < NTHS; i++)
-	      // if thread could not be found, log it & count it
+	      // if thread could not be found (probably 'cause is dead!), log it, count it and restart it!
 	      if (plc[i] && (pthread_kill (plc[i], 0) == ESRCH))
 		{
 		  syslog (LOG_CRIT, "error in %s (file %s at line %d): thread %s, %s", 
 			  __func__, __FILE__, __LINE__, plcsDta[i]->ip, strerror (ESRCH));
 		  died ++;
-		  // delete thread id from list
-		  plc[i] = 0;
 		  // set thread status to 'ERR'
 		  res = setPlcState (conn, plcsDta[i]->id, ERR);
+		  // trying to restart thread...
+		  if (res = pthread_create (&plc[i], NULL, doWork, (void *)plcsDta[i]))
+		    {
+		      syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, strerror (errno));
+		      died --;
+		    }
+		  else
+		    // set thread status to 'RUN'
+		    res = setPlcState (conn, plcsDta[i]->id, RUN);
 		}
 	    // all threads died, exits
 	    if (died == NTHS)
@@ -883,7 +888,6 @@ main (int argc, char *argv[])
 		pd = NULL;
 	      }
 	  }
-*/
       }
   // we exited...if there're threads still alive...
   if (died < NTHS) 
