@@ -47,39 +47,41 @@ typedef struct pData * pDataPtr;
 
 // plc's data structure
 struct pData {
+    // thread exit status
+    pStatus exit;
     // mobile average data windows
     int *vList;
     // plc's ip address
     char ip[15];
     // plc's MPI address
     int mpi,
-    	// plc's RACK
+    // plc's RACK
     	rack,
-    	// plc's SLOT
+    // plc's SLOT
     	slot,
-    	// plc's id
+    // plc's id
     	id,
-	// signal waited for next activation
+    // signal waited for next activation
 	sig,
-	// first element in data windows
+    // first element in data windows
 	first,
-	// last element in data windows
+    // last element in data windows
 	last,
-	// current min for wind speed in mobile windows
+    // current min for wind speed in mobile windows
         min,
-	// current max for wind speed in mobile windows
+    // current max for wind speed in mobile windows
         max,
-	// current average for wind speed in mobile windows
+    // current average for wind speed in mobile windows
         avg,
-	// anemometer 1 data
+    // anemometer 1 data
         vp1,
-	// anemometer 2 data
+    // anemometer 2 data
         vp2,
-	// weight (spreader + load)
+    // weight (spreader + load)
         wgt,
-	// height (spreader)
+    // height (spreader)
         hgt,
-	// position (driver's cab)
+    // position (driver's cab)
         pos;
     // plc's info
     unsigned char nfo[2];
@@ -98,6 +100,7 @@ extern int initWindLevelParam (MYSQL *conn);
 extern int setBackLog (MYSQL *conn, const bool enable);
 extern int setLiveDta (MYSQL *conn, const int unsigned id, const bool enable);
 extern int setPlcState (MYSQL *conn, const int unsigned id, const unsigned int status);
+extern int getPlcState (MYSQL *conn, const int unsigned id, pStatus *status);
 extern void* doWork (void *argv);
 
 extern int lfp;
