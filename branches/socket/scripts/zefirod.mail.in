@@ -1,0 +1,9 @@
+An error occurred and the Anemometer Service Zefirod died unexpectedly.
+Check file "/var/log/messages" on Astreo.tdt.it <10.50.1.10> for possible causes.
+
+The service has been restarted automatically.
+
+
+***************   This e-mail is automatically transmitted by the Anemometer Service Zefirod   *******************
+Please do not reply to this message. If you require assistance please contact IT Department <it_department@tdt.it>
+

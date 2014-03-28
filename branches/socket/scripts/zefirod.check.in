@@ -1,0 +1,30 @@
+#!/bin/bash
+##################################################
+#                                                #
+# description: Check if zefiro service is runnig #
+# processname: zefirod.check                     #
+#                                                #
+##################################################
+
+# Copyright (C) 2009 Emiliano Giovannetti <emiliano.giovannetti@tdt.it>
+#
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+retval=
+to=sistemisti@tdt.it
+prog=/etc/init.d/zefirod
+errfile=/usr/local/etc/zefirod.mail
+subject='Zefiro Service Error'
+
+retval=`$prog status | grep running`
+logger -i -p local5.info "$retval"
+if [ -z "$retval" ]; then
+        $prog restart &&  | nail -s "$subject" $to < $errfile
+fi
+

@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+HOME=/
+MAILTO=""
+
+*/5 * * * 1-6 root /usr/local/sbin/zefirod.check

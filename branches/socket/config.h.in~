@@ -1,0 +1,76 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* PLC's alarm area */
+#undef AAREA
+
+/* PLC's alarm area length */
+#undef ALEN
+
+/* PLC's alarm sampling period (in seconds) */
+#undef APERIOD
+
+/* PLC's data area */
+#undef DAREA
+
+/* PLC's DB host */
+#undef DBHOST
+
+/* PLC's DB */
+#undef DBNAME
+
+/* PLC's DB password */
+#undef DBPWD
+
+/* PLC's DB user */
+#undef DBUSER
+
+/* "Debug enabled" */
+#undef DEBUG
+
+/* PLC's data area length */
+#undef DLEN
+
+/* PLC's data sampling period (in seconds) */
+#undef DPERIOD
+
+/* Define to 1 if you have the `nodave' library (-lnodave). */
+#undef HAVE_LIBNODAVE
+
+/* MPI's address */
+#undef MPI_ADDR
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Rack number */
+#undef RACK
+
+/* Daemon's user */
+#undef RUN_AS_USER
+
+/* "Sampling enabled" */
+#undef SAMPLING
+
+/* CPU's slot */
+#undef SLOT
+
+/* PLC's connection timeout (in seconds) */
+#undef TIMEOUT
+
+/* Version number of package */
+#undef VERSION
