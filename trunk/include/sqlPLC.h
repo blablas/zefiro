@@ -21,7 +21,8 @@
 #include <errmsg.h>
 
 #define SELECT_PLC_DTA 		"SELECT id, inet_ntoa(ip), mpi, rack, slot FROM registry where en = 1"
-#define SET_PLC_SATUS		"UPDATE registry set sts = ? WHERE id = ?"
+#define SET_PLC_STATUS		"UPDATE registry set sts = ? WHERE id = ?"
+#define GET_PLC_STATUS		"SELECT CAST(sts AS UNSIGNED) FROM registry WHERE id = ?"
 #define SELECT_ENABLE_LEVELS 	"SELECT id, vp, vmax, vmin, iv, up, do, hys, evt, ntv, smp FROM windLevels where en = 1"
 #define UPDATE_LIVE_DTA		"UPDATE windLiveValues SET vp = ?, vmax = ?, vmin = ?, iv = ?, ts = now(), lvl = ? WHERE id = ?"
 #define UPDATE_INFO		"UPDATE infoAlarms SET hgt = ?, wgt = ?, pos = ?, nfo1 = ?, nfo2 = ? WHERE id = ?"

@@ -7,12 +7,13 @@
 
 #define NTHREAD		2
 
-void *tFunc (void *argv)
+void 
+*tFunc (void *argv)
 {
   int rsig;
   periodDscPtr pd;
 
-  pd = make_periodic (1, *((int *)argv));
+  pd = make_periodic (5, *((int *)argv));
   while (pd)
     {
       printf ("thread %d, go to sleep waiting for signal %d\n", pthread_self(), *((int *)argv));
@@ -22,13 +23,22 @@ void *tFunc (void *argv)
   free (pd);
 }
 
+int 
+startThread (pthread_t *t, int *sig)
+{
+  return pthread_create (&t, NULL, tFunc, (void *)&sig);
+}
+
 int
 main (void)
 {
   pthread_t plc[NTHREAD];
-  sigset_t timerMask, waitMask;
+  sigset_t timerMask, 
+	   waitMask;
   //struct sigaction saio;
-  int i, sig[NTHREAD], rsig;
+  int i, 
+      sig[NTHREAD], 
+      rsig;
 
   // mask SIGRT signals for all threads
   sigemptyset (&timerMask);
