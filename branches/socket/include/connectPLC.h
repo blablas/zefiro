@@ -20,6 +20,6 @@
 #include <nodave.h>
 #include <openSocket.h>
 
-extern int plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc);
+extern daveConnection* plcConnect (const char *ip, int mpi, int rack, int slot, int *err);
 extern int plcDisconnect (daveConnection *dc);
 #endif

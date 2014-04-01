@@ -23,15 +23,44 @@
 #include <stdio.h>
 #include "connectPLC.h"
 
-int 
-plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc)
+//int 
+//plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc)
+//{
+//  _daveOSserialType fds;
+//  int j, 
+//      optval, 
+//      res = daveConnectionError;
+//  daveInterface *di;
+//
+//  // open a TCP on ISO connection with PLC (timeout in seconds)
+//  fds.rfd = openSocket (102, ip, TIMEOUT);
+//  fds.wfd = fds.rfd;
+//
+//  // connect to the PLC
+//  if (fds.rfd)
+//    {
+//      di = daveNewInterface (fds, "IF1", 1, daveProtoISOTCP, daveSpeed187k);
+//      daveSetTimeout (di, TIMEOUT * 1000000);
+//      if (*dc = daveNewConnection (di, mpi, rack, slot))
+//	//if (res = daveConnectPLC (*dc)) 
+//	  // plcDisconnect (*dc);
+//	res = daveConnectPLC (*dc);
+//    }
+//  //else 
+//    //*dc = NULL;
+//  return res;
+//}
+
+daveConnection* 
+plcConnect (const char *ip, int mpi, int rack, int slot, int *err)
 {
   _daveOSserialType fds;
   int j, 
-      optval, 
-      res = daveConnectionError;
+      optval; 
   daveInterface *di;
+  daveConnection *dc = NULL;
 
+  *err = daveConnectionError;
   // open a TCP on ISO connection with PLC (timeout in seconds)
   fds.rfd = openSocket (102, ip, TIMEOUT);
   fds.wfd = fds.rfd;
@@ -41,33 +70,31 @@ plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc)
     {
       di = daveNewInterface (fds, "IF1", 1, daveProtoISOTCP, daveSpeed187k);
       daveSetTimeout (di, TIMEOUT * 1000000);
-      *dc = daveNewConnection (di, mpi, rack, slot);
-      if (res = daveConnectPLC (*dc)) 
-	plcDisconnect (*dc);
+      if (dc = daveNewConnection (di, mpi, rack, slot))
+	if (*err = daveConnectPLC (dc))
+	  if (plcDisconnect (dc))
+	    *err = daveConnectionError;
     }
-  else 
-    *dc = NULL;
-  return res;
+  return dc;
 }
 
 int
 plcDisconnect (daveConnection *dc)
 {
-  int res = 1;
+  int res = 0;
 
   if (dc)
     {
-      daveDisconnectPLC (dc);
+      daveDisconnectPLC (dc);				// dummy function, always returns 0
       if (dc->iface)
 	{
-	  daveDisconnectAdapter (dc->iface);
+	  daveDisconnectAdapter (dc->iface);		// dummy function, always returns 0
 	  if (dc->iface->fd.rfd)
-	    res = closeSocket (dc->iface->fd.rfd);
+	    res = closeSocket (dc->iface->fd.rfd);	// close socket (0 on success, -1 on failure)
 	  free (dc->iface);
 	  dc->iface = NULL;
 	}
       free (dc);
-      dc = NULL;
     }
   return res;
 }

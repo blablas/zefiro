@@ -22,10 +22,11 @@
 
 int lfp = -1;
 char *pidfile = NULL;
-//unsigned int LPARAM, 
 unsigned int MIN,	// MIN samples number (mobile average calculation) 
 	     MAX, 	// MAX samples number (mobile average calculation)
 	     NRETRY;	// Number of retries (in main doWork cycle) before giving up on a anemometer 
+pthread_mutex_t mExit = PTHREAD_MUTEX_INITIALIZER;	// mutex associated with thread exit status
+pthread_cond_t cExit  = PTHREAD_COND_INITIALIZER;	// condition associated with thread exit status
 
 void
 daemonize (const char *pidfile)
@@ -569,17 +570,18 @@ doWork (void *argv)
   MYSQL *conn;
   MYSQL_STMT *stmt;
   MYSQL_BIND paramU[6];
-  //bool exit = false;
   int i,
       res,
       vp,
       level,
-      disconnect = 1,
       // signal received in sigwait (SIGRTMIN based or SIGTERM)
       rsig,
-      plcErr = 0;
+      conErr,
+      errNo = 0;
+  bool error;
+  pStatus tExit = UNK;
   periodDscPtr pd;
-  daveConnection *dc;
+  daveConnection *dc = NULL;
   pDataPtr dta;
 
 #ifdef DEBUG
@@ -640,36 +642,36 @@ doWork (void *argv)
 	      /*---------------------*/
 	      /*- infinte main loop -*/
 	      /*---------------------*/
-	      while (!dta->exit)
+	      // TODO: access to dta->exit should be made in mutex
+	      while (tExit == UNK)
 		{
-		  // connecting to PLC if disconnected
-		  if (disconnect) 
+		  error = false;
+		  // connecting to PLC
+		  if (dc == NULL) 
 		    {
+#ifdef DEBUG
 		      syslog (LOG_INFO, "CONNECTING to plc %d: %s...", dta->id - 1, dta->ip);
-	              disconnect = plcConnect (dta->ip, dta->mpi, dta->rack, dta->slot, &dc);
-		    }
-		  // error connecting to PLC 
-		  if (disconnect)
-		    {
-		      plcErr++;
-		      syslog (LOG_ERR, "error CONNECTING in %s of plc %d: %s (file %s at line %d): %s",
-			      __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, daveStrerror(disconnect));
+#endif
+	              if (((dc = plcConnect (dta->ip, dta->mpi, dta->rack, dta->slot, &conErr)) == NULL))
+			{
+			  error = true;
+			  syslog (LOG_ERR, "error CONNECTING in %s of plc %d: %s (file %s at line %d): %s",
+				  __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, daveStrerror(conErr));
+			}
 		    }
 		  // connected to PLC
-		  else
+		  if (dc != NULL)
 		    { 
-		      res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN, NULL);
 		      // error reading from PLC
-		      if (res)
+		      if (res = daveReadBytes (dc, daveDB, DAREA, 0, DLEN, NULL))
 			{
-			  plcErr++;
+			  error = true;
 			  syslog (LOG_ERR, "error READING in %s of plc %d: %s (file %s at line %d): %s", 
 				  __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, daveStrerror(res));
 			}
 		      // successfull read from PLC
 		      else
 			{
-			  plcErr = 0;
 			  /*--------------------------------------------------*/
 			  /*- convert data for storing into mysql data store -*/
 			  /*--------------------------------------------------*/
@@ -710,10 +712,9 @@ doWork (void *argv)
 			  vp = (dta->vp2 < MAXWIND) ? dta->vp2 : ((dta->vp1 < MAXWIND) ? dta->vp1 : -1);
 			  if (vp < 0)
 			    {
-			      syslog (LOG_ERR, "error %s of plc %d: %s (file %s at line %d): both anemometer are in error",
+			      error = true;
+			      syslog (LOG_ERR, "error %s of plc %d: %s (file %s at line %d): both anemometers are in error",
 				      __func__, dta->id - 1, dta->ip, __FILE__, __LINE__);
-			      //exit = true;
-			      dta->exit = ERR;
 			    }
 			  // calculate min, max and avg (moving average)
 			  processData (dta, vp);
@@ -732,69 +733,74 @@ doWork (void *argv)
 			  // update mysql data store
 			  if (res = sqlExecStmt (stmt))
 			    {
+			      error = true;
 			      syslog (LOG_ERR, "error in %s of plc %d: %s (file %s at line %d): %s", 
 				      __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
-			      // if connection error to mysql, exit!
-			      if (res == CR_SERVER_GONE_ERROR || res == CR_SERVER_LOST || CR_SERVER_LOST_EXTENDED)
-				{
-				  //exit = true;
-				  dta->exit = ERR;
-				}
 			    }
 			}
 		    }
-		  /*--------------------------------------*/
-		  /*- wait next period or SIGTERM anyway -*/
-		  /*- if SIGTERM received, exit (STPme)! -*/
-		  /*--------------------------------------*/
-		  if (!wait_period (pd, &rsig))
+		  // wait next period or SIGTERM...
+		  wait_period (pd, &rsig);
+		  // if SIGTERM, disconnect and exit (exit status = STP)
+		  if (rsig == SIGTERM)
 		    {
-		      if (rsig == SIGTERM)
-			{
-			  syslog (LOG_INFO, "EXITING thread of plc %d: %s due to SIGTERM signal...", dta->id - 1, dta->ip);
-			  //exit = true;
-			  dta->exit = STP;
-			}
+		      // TODO: access to dta->exit should be made in mutex
+		      //pthread_mutex_lock (&mExit);
+		      dta->exit = STP;
+		      //pthread_mutex_unlock (&mExit);
+		      syslog (LOG_INFO, "EXITING (status: %d) thread of plc %d: %s due to SIGTERM signal...", dta->exit, dta->id - 1, dta->ip);
 		    }
-		  else 
-		    syslog (LOG_ERR, "error in %s of plc %d: %s (file %s at line %d): error waiting for next period", 
-			    __func__, dta->id - 1, dta->ip, __FILE__, __LINE__);
-		  /*---------------------------------------------*/
-		  /*- if PLC is connected AND		        -*/
-		  /*- there were error reading or connecting OR -*/ 
-		  /*- exit was set true, disconnect from PLC	-*/
-		  /*---------------------------------------------*/
-		  if (!disconnect)
-		    if ((plcErr) || (dta->exit))
-		      if (!plcDisconnect (dc))
+		  // if next period arrives...
+		  else
+		    {
+		      // check for error in this loop iterarion...
+		      if (error)
 			{
+#ifdef DEBUG
 			  syslog (LOG_INFO, "DISCONNECTING from plc %d: %s...", dta->id - 1, dta->ip);
-			  disconnect = 1;
+#endif
+			  if (!plcDisconnect (dc))
+			    dc = NULL;
+			  errNo++; 
+			  // if too many consecutive errors, exit with error
+			  if (errNo >= NRETRY)
+			    {
+			      // TODO: access to dta->exit should be made in mutex
+			      // //pthread_mutex_lock (&mExit);
+			      dta->exit = ERR;
+			      //pthread_mutex_unlock (&mExit);
+			      syslog (LOG_CRIT, "error in %s of plc %d: (%s, file %s at line %d): %d consecutive error occurred", 
+				      __func__, dta->id - 1,  dta->ip, __FILE__, __LINE__, NRETRY);
+			    }
 			}
-		  /*--------------------------------------------------*/
-		  /*- if errors are more than NRETRY, log and exit ! -*/ 
-		  /*--------------------------------------------------*/
-		  if (plcErr >= NRETRY)
-		    {
-		      syslog (LOG_CRIT, "error in %s of plc %d: (%s, file %s at line %d): %d consecutive error occurred", 
-			      __func__, dta->id - 1,  dta->ip, __FILE__, __LINE__, NRETRY);
-		      //exit = true;
-		      dta->exit = ERR;
+		      else 
+			errNo = 0;
 		    }
+		  //pthread_mutex_lock (&mExit);
+		  tExit = dta->exit;
+		  //pthread_mutex_unlock (&mExit);
 		}
+	      // disconnect from PLC
+	      if (!plcDisconnect (dc))
+		dc = NULL;
 	      // delete periodic timer
 	      if (res = timer_delete (pd->timerId))
 		syslog (LOG_ERR, "error in %s of plc %d: %s (file %s at line %d): %s",
 			__func__, dta->id - 1, dta->ip, __FILE__, __LINE__, strerror (res));
 	      // free periodic descriptor
 	      free (pd);
+	      pd = NULL;
 	    }
 	}
     }
   if (sqlCloseStmt (&stmt))
     syslog (LOG_ERR, "error in %s of plc %d: %s (file %s at line %d): %s",
 	    __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
-  setPlcState (conn, dta->id, dta->exit);
+  // TODO: access to dta->exit should be made in mutex
+  //pthread_mutex_lock (&mExit);
+  tExit = dta->exit;
+  //pthread_mutex_unlock (&mExit);
+  setPlcState (conn, dta->id, tExit);
   sqlDisconnect (&conn);
 }
 
@@ -803,6 +809,7 @@ main (int argc, char *argv[])
 {
   int c, 
       rsig, 
+      tExit,
       i = 0, 
       res = 0,
       died = 0,
@@ -910,36 +917,40 @@ main (int argc, char *argv[])
 	  {
 	    free (pd);
 	    pd = NULL;
+	    syslog (LOG_INFO, "About to exit main thread due to SIGTERM...");
+	    continue;
 	  }
-
 	// SIGUSR1 received (timer expiration) check for dead threads
 	else
 	  {
 	    for (i = 0; i < NTHS; i++)
 	      // if thread could not be found (probably 'cause is dead!), log it, count it and (maybe) restart it!
-	      //if ((plc[i] > 0) && (pthread_kill (plc[i], 0) == ESRCH))
 	      if ((plc[i] > 0) && (pthread_kill (plc[i], 0) == ESRCH))
 		{
-		  died ++;
 		  // get state of the 'missing' PLC thread
 		  pthread_join (plc[i], NULL);
 		  plc[i] = 0;
-		  // trying to restart only if it was died unexpectedly
-		  if (plcsDta[i]->exit == UNK)
+		  // trying to restart only if it was died unexpectedly 
+		  // TODO: access to plcsDta[i]->exit should be made in mutex
+		  //pthread_mutex_lock (&mExit);
+		  tExit = plcsDta[i]->exit;
+		  //pthread_mutex_unlock (&mExit);
+		  if (tExit == UNK)
 		    {
 		      syslog (LOG_CRIT, "error in %s (file %s at line %d): thread (status = %d) %s, %s", 
-			      __func__, __FILE__, __LINE__, plcsDta[i]->exit, plcsDta[i]->ip, strerror (ESRCH));
+			      __func__, __FILE__, __LINE__, tExit, plcsDta[i]->ip, strerror (ESRCH));
 		      // set thread status to 'ERR'
 		      res = setPlcState (conn, plcsDta[i]->id, ERR);
+		      died ++;
 		      // trying to restart thread...
 		      if (res = pthread_create (&plc[i], NULL, doWork, (void *)plcsDta[i]))
+			syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, strerror (errno));
+		      else
 			{
-			  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, strerror (errno));
+			  // set thread status to 'RUN'
+			  res = setPlcState (conn, plcsDta[i]->id, RUN);
 			  died --;
 			}
-		      else
-			// set thread status to 'RUN'
-			res = setPlcState (conn, plcsDta[i]->id, RUN);
 		    }
 		}
 	    // all threads died, exits
@@ -950,19 +961,14 @@ main (int argc, char *argv[])
 	      }
 	  }
       }
+  syslog (LOG_INFO, "Main thread terminated, let's cleanup threads...");
   // we exited...if there're threads still alive...
   if (died < NTHS) 
     {
       // cancel and join all PLC's threads still living
       for (i = 0; i < NTHS; i++)
-	//if ((plc[i] > 0) && (!pthread_kill (plc[i], SIGTERM)))
 	if ((plc[i] > 0) && !(pthread_kill (plc[i], SIGTERM)))
 	  pthread_join (plc[i], NULL);
-/*
-	  if (!pthread_join (plc[i], NULL))
-	    // set thread status to 'STP'
-	    setPlcState (conn, plcsDta[i]->id, STP);
-*/
       // disable backlog of windLiveValues
       res = setBackLog (conn, false);
     }
