@@ -22,7 +22,6 @@
 
 int lfp = -1;
 char *pidfile = NULL;
-//unsigned int LPARAM, 
 unsigned int MIN,	// MIN samples number (mobile average calculation) 
 	     MAX, 	// MAX samples number (mobile average calculation)
 	     NRETRY;	// Number of retries (in main doWork cycle) before giving up on a anemometer 
@@ -170,7 +169,6 @@ initPlcsData (MYSQL *conn, int *len)
   pDataPtr *dta;
   MYSQL_STMT *stmt;
   MYSQL_BIND resultSet[5];
-  // SELECT_PLC_DTA output buffers
   char ip[15];
   int id,
       mpi,
@@ -238,8 +236,6 @@ initPlcsData (MYSQL *conn, int *len)
 			  syslog (LOG_INFO, "dta[%d]->vList[%d]: %d", pos, i, dta[pos]->vList[i]);
 #endif
 			}
-//		      for (i = 0; i < sizeof (dta[pos]->alm); i++)
-//			dta[pos]->alm[i] = (unsigned char) 0;
 		      for (i = 0; i < sizeof (dta[pos]->nfo); i++)
 			dta[pos]->nfo[i] = (unsigned char) 0;
 		      dta[pos]->mpi = mpi;
@@ -342,7 +338,6 @@ initWindLevels (MYSQL *conn)
       ntv,
       smp,
       res = 0;
-  //stateLst rows;
 
   if (res = sqlPrepareStmt (conn, &stmt, SELECT_ENABLE_LEVELS))
     syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_stmt_error (stmt));
@@ -414,7 +409,6 @@ initWindLevels (MYSQL *conn)
 	  else 
 	    {
 	      // initialize state descriptors table
-	      //rows = mysql_stmt_num_rows (stmt);
 	      while (!mysql_stmt_fetch (stmt))
 		if (!add2StateDscTbl (id, vp, vmax, vmin, iv, sup/DPERIOD, low/DPERIOD, evt, ntv, smp))
 		  syslog (LOG_ERR, "error in %s (file %s at line %d): cannot add state descriptor at position %d", 
@@ -574,9 +568,7 @@ doWork (void *argv)
       vp,
       level,
       disconnect = 1,
-      // signal received in sigwait (SIGRTMIN based or SIGTERM)
-      rsig,
-      plcErr = 0;
+      rsig;
   periodDscPtr pd;
   daveConnection *dc;
   pDataPtr dta;
@@ -633,7 +625,9 @@ doWork (void *argv)
 		__func__, dta->id - 1, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
       else
 	{
-	  // make thread periodic
+	  /*------------------------*/
+	  /*- make thread periodic -*/
+	  /*------------------------*/
 	  if (pd = make_periodic (DPERIOD, dta->sig))
 	    {
 	      /*---------------------*/
@@ -660,12 +654,9 @@ doWork (void *argv)
 
 		  // connect to PLC
                   if (!disconnect)
-		    {
-//		      syslog (LOG_INFO, "DISCONNECTING to plc %d: %s...", dta->id - 1, dta->ip);
-		      if (!plcDisconnect (dc))
-			disconnect = 1;
-		    }
-//		  syslog (LOG_INFO, "CONNECTING to plc %d: %s...", dta->id - 1, dta->ip);
+		    if (!plcDisconnect (dc))
+		      disconnect = 1;
+
 		  disconnect = plcConnect (dta->ip, dta->mpi, dta->rack, dta->slot, &dc);
 		  if (disconnect) 
 		    {
@@ -677,7 +668,6 @@ doWork (void *argv)
 		  // error reading from PLC
 		  if (res)
 		    {
-		      plcErr++;
 		      syslog (LOG_ERR, "error READING in %s of plc %d: %s (file %s at line %d): %s", 
 			      __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, daveStrerror(res));
 		      continue;
@@ -685,7 +675,6 @@ doWork (void *argv)
 		    // successfull read from PLC
 		  else
 		    {  
-		      plcErr = 0;
 		      /*--------------------------------------------------*/
 	      	      /*- convert data for storing into mysql data store -*/
       		      /*--------------------------------------------------*/
@@ -757,8 +746,8 @@ doWork (void *argv)
   if (sqlCloseStmt (&stmt))
     syslog (LOG_ERR, "error in %s of plc %d: %s (file %s at line %d): %s",
 	    __func__, dta->id - 1, dta->ip, __FILE__, __LINE__, mysql_stmt_error (stmt));
-  //setPlcState (conn, dta->id, dta->exit);
   sqlDisconnect (&conn);
+  pthread_exit ((void *) (dta->exit));
 }
 
 int
@@ -839,23 +828,15 @@ main (int argc, char *argv[])
       mysql_library_end ();
       exit (EXIT_FAILURE);
     }
-  // enable backlog of windLiveValues
-/*  
-   if (res = setBackLog (conn, true))
-    {
-      syslog (LOG_ALERT, "exit due to critical error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, mysql_error(conn));
-      sqlDisconnect (&conn);
-      mysql_library_end ();
-      exit (EXIT_FAILURE);
-    }
-*/
 
-  // ATTENTION!!! MAKE OURSELF A DAEMON !!!
+  // ATTENTION!!! MAKE OURSELF A DAEMON!!!
   daemonize (pidfile);
-  // NOW WE'RE IN HELL...DO BAD THINGS !!!
+  // NOW WE'RE IN HELL...DO BAD THINGS!!!
 
   // spawn PLC's threads
   pthread_t plc[NTHS];
+  void *status[NTHS];
+
   for (i = 0; i < NTHS; i++)
     {
       plc[i] = 0;
@@ -885,29 +866,9 @@ main (int argc, char *argv[])
 	      if ((plc[i] > 0) && (pthread_kill (plc[i], 0) == ESRCH))
 		{
 		  died ++;
-		  res = setPlcState (conn, plcsDta[i]->id, STP);
-		  // get state of the 'missing' PLC thread
-		  pthread_join (plc[i], NULL);
+		  pthread_join (plc[i], &status[i]);
+		  res = setPlcState (conn, plcsDta[i]->id, (pStatus) status[i]);
 		  plc[i] = 0;
-/*		  
-		  // trying to restart only if it was died unexpectedly
-		  if (plcsDta[i]->exit == UNK)
-		    {
-		      syslog (LOG_CRIT, "error in %s (file %s at line %d): thread (status = %d) %s, %s", 
-			      __func__, __FILE__, __LINE__, plcsDta[i]->exit, plcsDta[i]->ip, strerror (ESRCH));
-		      // set thread status to 'ERR'
-		      res = setPlcState (conn, plcsDta[i]->id, ERR);
-		      // trying to restart thread...
-		      if (res = pthread_create (&plc[i], NULL, doWork, (void *)plcsDta[i]))
-			{
-			  syslog (LOG_ERR, "error in %s (file %s at line %d): %s", __func__, __FILE__, __LINE__, strerror (errno));
-			  died --;
-			}
-		      else
-			// set thread status to 'RUN'
-			res = setPlcState (conn, plcsDta[i]->id, RUN);
-		    }
-*/
 		}
 	    // all threads died, exits
 	    if (died == NTHS)
@@ -917,27 +878,13 @@ main (int argc, char *argv[])
 	      }
 	  }
       }
-  // we exited...if there're threads still alive...
-//  if (died < NTHS) 
-//    {
-      // cancel and join all PLC's threads still living
-      for (i = 0; i < NTHS; i++)
-	{
-	  if ((plc[i] > 0) && !(pthread_kill (plc[i], SIGTERM)))
-	    pthread_join (plc[i], NULL);
-	  res = setPlcState (conn, plcsDta[i]->id, STP);
-	}
-/*
-	  if (!pthread_join (plc[i], NULL))
-	    // set thread status to 'STP'
-	    setPlcState (conn, plcsDta[i]->id, STP);
-*/
-      // disable backlog of windLiveValues
-      //res = setBackLog (conn, false);
-//    }
-  // ...else log that we exited due to critical error
-//  else
-//    syslog (LOG_ALERT, "error in %s (file %s at line %d): all threads died unexpectedly", __func__, __FILE__, __LINE__);
+  // kill all threads
+  for (i = 0; i < NTHS; i++)
+    {
+      if ((plc[i] > 0) && !(pthread_kill (plc[i], SIGTERM)))
+	pthread_join (plc[i], &status[i]);
+      res = setPlcState (conn, plcsDta[i]->id, (pStatus) status[i]);
+    }
   // disconnect from mysql data store
   sqlDisconnect (&conn);
   mysql_library_end ();

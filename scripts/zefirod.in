@@ -65,11 +65,13 @@ case "$1" in
 	;;
   restart)
 	stop
+	sleep 10
 	start
 	;;
   condrestart)
 	if [ -f ${pidfile} ] ; then
 		stop
+		sleep 10
 		start
 	fi
 	;;
