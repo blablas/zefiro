@@ -45,8 +45,8 @@ plcConnect (const char *ip, int mpi, int rack, int slot, daveConnection **dc)
       if (res = daveConnectPLC (*dc)) 
 	plcDisconnect (*dc);
     }
-  else 
-    *dc = NULL;
+//  else 
+//    *dc = NULL;
   return res;
 }
 
